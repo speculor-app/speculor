@@ -1,0 +1,186 @@
+Speculor End User License Agreement
+====================================
+
+Copyright (c) 2026 Fabio Barros. All rights reserved.
+
+This End User License Agreement ("Agreement") is a legal contract between you
+(an individual or a single legal entity, "You") and Fabio Barros ("Licensor")
+governing Your use of the Speculor engine and application, including all
+binaries, libraries, configuration files, documentation, fonts, icons, sample
+content, and any updates or supplements provided by Licensor (collectively, the
+"Software"). By installing, copying, accessing, or otherwise using the
+Software, You agree to be bound by the terms of this Agreement. If You do not
+agree, do not install, copy, or use the Software.
+
+The Software is licensed, not sold. Licensor retains all right, title, and
+interest in and to the Software, including all intellectual property rights.
+No rights are granted to You other than those expressly set out below.
+
+1. License Grant
+----------------
+
+Subject to Your continuous compliance with this Agreement and to the existence
+of a valid, unexpired license key issued for the Software by Licensor or
+Licensor's authorized licensing service, Licensor grants You a non-exclusive,
+non-transferable, non-sublicensable, revocable license to:
+
+  (a) install and run one (1) copy of the Software per license key, on
+      hardware You own or lawfully control, solely for Your own internal
+      business operations or personal use; and
+
+  (b) make a reasonable number of backup copies of the Software, provided
+      that each copy is kept solely as a backup and includes all copyright
+      and proprietary notices contained in the original.
+
+The Software's runtime activation gate verifies the validity of Your license
+key. Use of the Software without a valid license key, or in a manner that
+circumvents the activation gate, is not licensed under this Agreement and
+constitutes a material breach.
+
+2. Restrictions
+---------------
+
+Except as expressly permitted by this Agreement or by applicable law that
+cannot be waived by contract, You will not, and will not permit any third
+party to:
+
+  (a) copy, redistribute, publish, sublicense, lease, rent, lend, sell,
+      assign, or otherwise transfer the Software or any portion of it;
+
+  (b) modify, adapt, translate, port, or create derivative works of the
+      Software;
+
+  (c) reverse-engineer, decompile, disassemble, or otherwise attempt to
+      derive the source code, underlying algorithms, file formats, or
+      non-public APIs of the Software, except to the extent (and only to
+      the extent) that applicable law expressly permits such activity
+      notwithstanding this restriction;
+
+  (d) remove, obscure, alter, or fail to reproduce any proprietary notice,
+      label, or mark embedded in or affixed to the Software;
+
+  (e) circumvent, disable, or interfere with any license-key validation,
+      activation, watermarking, copy-protection, or telemetry mechanism
+      included in the Software;
+
+  (f) use the Software, or permit it to be used, to develop, train,
+      improve, or benchmark a product or service that competes with the
+      Software;
+
+  (g) use the Software to provide a managed, hosted, or "as-a-service"
+      offering to third parties; or
+
+  (h) use the Software in violation of any applicable law, regulation, or
+      third-party right.
+
+3. Plugins and Third-Party Components
+-------------------------------------
+
+The Software loads dynamically-linked plugin modules at runtime through a
+documented C ABI ("Plugin Interface"). Plugins are governed by their own
+license terms, not by this Agreement. Nothing in this Agreement grants You any
+right in or to any plugin, and nothing in this Agreement is intended to extend
+the license terms of any plugin to the Software.
+
+The Software incorporates or ships alongside third-party components subject to
+their own license terms. Those terms are reproduced or referenced in the file
+`THIRD_PARTY_NOTICES.md` distributed with the Software. To the extent of any
+conflict between this Agreement and the license terms governing a third-party
+component, the license terms of that component prevail with respect to that
+component only. This Agreement does not purport to limit any right granted to
+You by a third-party license, including any right to receive or modify the
+source code of an LGPL-licensed component such as Qt or FFmpeg.
+
+4. Updates
+----------
+
+Licensor may, at its discretion, make updates, upgrades, patches, or new
+versions of the Software available to You. Any such release is, unless
+accompanied by a separate license, Software within the meaning of this
+Agreement and governed by it. Licensor is under no obligation to provide
+updates or to maintain compatibility with any prior version.
+
+5. Term and Termination
+-----------------------
+
+This Agreement is effective on the date You first install or use the Software
+and continues until terminated. The Agreement terminates automatically and
+without notice if (i) You breach any term of this Agreement, (ii) Your license
+key expires, is revoked, or is not renewed, or (iii) Licensor ceases to make
+the Software available to You. On termination, You must immediately stop using
+the Software and destroy all copies of the Software in Your possession or
+control. Sections 2, 6, 7, 8, 9, and 10 survive termination.
+
+6. No Warranty
+--------------
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITH ALL FAULTS AND
+WITHOUT WARRANTY OF ANY KIND. LICENSOR DISCLAIMS ALL WARRANTIES AND CONDITIONS,
+WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE,
+NON-INFRINGEMENT, ACCURACY, QUIET ENJOYMENT, AND ANY WARRANTY ARISING OUT OF
+COURSE OF DEALING OR USAGE OF TRADE. LICENSOR DOES NOT WARRANT THAT THE
+SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR THAT DEFECTS WILL BE
+CORRECTED. NO ADVICE OR INFORMATION OBTAINED FROM LICENSOR CREATES ANY WARRANTY
+NOT EXPRESSLY STATED IN THIS AGREEMENT.
+
+7. Limitation of Liability
+--------------------------
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT WILL LICENSOR BE
+LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR
+PUNITIVE DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, DATA, USE, GOODWILL, OR
+OTHER INTANGIBLE LOSSES, ARISING OUT OF OR RELATING TO THIS AGREEMENT OR THE
+SOFTWARE, EVEN IF LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+LICENSOR'S TOTAL CUMULATIVE LIABILITY UNDER OR IN CONNECTION WITH THIS
+AGREEMENT WILL NOT EXCEED THE GREATER OF (A) THE FEES YOU ACTUALLY PAID TO
+LICENSOR FOR THE SOFTWARE IN THE TWELVE (12) MONTHS PRECEDING THE EVENT GIVING
+RISE TO THE LIABILITY, OR (B) FIFTY UNITED STATES DOLLARS (US$50).
+
+These limitations apply notwithstanding the failure of essential purpose of any
+limited remedy and apply to the maximum extent permitted by law, even if any
+exclusion or limitation is held to be unenforceable.
+
+8. Export and Sanctions Compliance
+----------------------------------
+
+You acknowledge that the Software may be subject to export-control laws and
+regulations and to economic sanctions. You will not export, re-export, transfer,
+or otherwise make the Software available in violation of any such law or
+regulation, and You represent that You are not located in, organized under the
+laws of, or ordinarily resident in any jurisdiction subject to a comprehensive
+embargo, and that You are not on any restricted-party list maintained by any
+competent governmental authority.
+
+9. Governing Law and Jurisdiction
+---------------------------------
+
+This Agreement is governed by the laws of the jurisdiction in which Licensor
+has its principal place of business, without regard to its conflict-of-laws
+rules and excluding the United Nations Convention on Contracts for the
+International Sale of Goods. The courts of that jurisdiction have exclusive
+jurisdiction over any dispute arising out of or relating to this Agreement,
+subject to Licensor's right to seek injunctive or equitable relief in any
+competent court.
+
+10. Miscellaneous
+-----------------
+
+This Agreement, together with the license key issuance terms and any other
+agreement expressly referenced herein, constitutes the entire agreement
+between the parties regarding the Software and supersedes all prior or
+contemporaneous communications and proposals on this subject. If any provision
+of this Agreement is held to be unenforceable, the remaining provisions
+continue in full force, and the unenforceable provision will be reformed to
+the minimum extent necessary to make it enforceable. Licensor's failure to
+enforce any right or provision is not a waiver of that right or provision.
+You may not assign this Agreement, by operation of law or otherwise, without
+Licensor's prior written consent; any attempted assignment in violation of
+this section is void. Licensor may assign this Agreement freely.
+
+------------------------------------------------------------------------------
+This License covers the Speculor engine and application contained in this
+repository (`speculor-app`). The Speculor Plugin SDK is distributed under a
+separate license (see `speculor-sdk/LICENSE`). First-party Speculor plugins
+are distributed under their own license (see `speculor-plugins/LICENSE`).
+Third-party software is governed by `THIRD_PARTY_NOTICES.md`.
