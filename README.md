@@ -86,7 +86,7 @@ xattr -dr com.apple.quarantine .
 
 ## License key
 
-Speculor uses license-key activation. On first launch you'll be prompted for a key — paste it into the activation dialog and the app authenticates against the licensing service. See [docs/licensing.md](docs/licensing.md) for trial keys and offline activation.
+Speculor uses license-key activation. On first launch you'll be prompted for a key — paste it into the activation dialog and the app authenticates against the licensing service. Once activated, the key is cached locally; the app falls back to a 14-day offline grace period if the licensing service is unreachable.
 
 ## Basic usage
 
@@ -116,8 +116,6 @@ See [docs/getting-started.md](docs/getting-started.md) for a longer walkthrough.
 | Headless CLI runner | [docs/cli.md](docs/cli.md) |
 | Preferences | [docs/preferences.md](docs/preferences.md) |
 | `.speculor` project file format | [docs/project-format.md](docs/project-format.md) |
-| License-key activation | [docs/licensing.md](docs/licensing.md) |
-| Common errors / Vulkan / crash symbolication | [docs/troubleshooting.md](docs/troubleshooting.md) |
 
 ## Support
 
