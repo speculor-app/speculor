@@ -55,7 +55,7 @@ Reusable, pre-wired node-group templates stored as JSON in `templates/recipes/`.
 ## Visualization
 
 - **Gadget-based** — display widgets (video, data, plots, histograms, maps, timelines, heatmaps), control widgets (button, slider, combobox, radio, text, color picker, XY pad), indicators (label, LED, gauge), and utilities (group frame, profiler overlay, log viewer).
-- **Self-registering gadget architecture** — a new gadget type is added with `SPC_REGISTER_GADGET` and an entry in `app/CMakeLists.txt`; no framework files change.
+- **Self-registering gadget architecture** — new gadget types are added without touching framework files; each gadget registers itself and exposes its own settings.
 - **Properties panel** — auto-generated settings UI from each gadget's `declare_properties()`.
 - **Multiple layouts per project** — create, rename, delete, switch, set a default; persisted alongside the graph.
 - **Canvas features** — background images, resolution presets, snap-to-grid, zoom controls.

@@ -1,21 +1,21 @@
 # Getting started
 
-A short walkthrough for building a first pipeline once Speculor is installed and running. See [installation.md](installation.md) for build instructions and [features.md](features.md) for the full UI reference.
+A short walkthrough for building a first pipeline once Speculor is installed and running. See [features.md](features.md) for the full UI reference.
 
 ## Launch the app
 
 ```bash
-./build/bin/speculor_app           # Linux / macOS
-build\bin\speculor_app.exe         # Windows
+./speculor_app                     # Linux / macOS (from the extracted release dir)
+speculor_app.exe                   # Windows
 ```
 
 The main window opens in **Pipeline Configuration** view (`Ctrl+1`). Three docks frame the central node-graph canvas:
 
-- **Modules** (left) — categorised list of every plugin that was discovered in `build/bin/plugins/`. Drag entries onto the canvas, or right-click the canvas to add nodes.
+- **Modules** (left) — categorised list of every plugin discovered in the `plugins/` directory next to the app binary. Drag entries onto the canvas, or right-click the canvas to add nodes.
 - **Node Properties** (right) — auto-generated parameter editor for the currently selected node.
 - **Bottom dock area** — Preview, Data Inspector, Log, and Profiler tabs (toggle via **View → Pipeline**).
 
-If the Modules list is empty, the plugins didn't build. Check that `speculor-plugins` was cloned alongside this repo and re-run the build.
+If the Modules list is empty, your install is missing the plugin bundle archives. Extract the `speculor-bundle-*.zip` / `.tar.xz` files from the same release at the install root and restart the app.
 
 ## Build a minimal pipeline
 

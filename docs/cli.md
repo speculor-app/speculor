@@ -1,6 +1,6 @@
 # `speculor_cli` — headless runner
 
-`speculor_cli` runs a saved `.speculor` project without the Qt GUI. Useful for batch processing, server deployments, regression testing, and CI. Build it via the standard build script ([installation.md](installation.md)); the binary lands in `build/bin/speculor_cli`.
+`speculor_cli` runs a saved `.speculor` project without the Qt GUI. Useful for batch processing, server deployments, regression testing, and CI. It ships in the same release archive as the GUI; the binary sits alongside `speculor_app` in the extracted install directory.
 
 ## Usage
 
@@ -19,7 +19,7 @@ speculor_cli <project.speculor> [plugin_dir] [options]
 Example:
 
 ```bash
-./build/bin/speculor_cli my_pipeline.speculor ./build/bin/plugins
+./speculor_cli my_pipeline.speculor ./plugins
 ```
 
 The CLI loads plugins from the directory, builds the pipeline, starts the engine, and (unless `--no-stream`) brings up one MJPEG HTTP server per layout marked `stream.enabled` in the project. It runs until interrupted with `Ctrl+C` (`SIGINT`) or `SIGTERM`. On shutdown it stops every streamer, calls `engine.stop()`, and exits with status 0.
