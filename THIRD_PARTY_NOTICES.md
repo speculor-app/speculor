@@ -20,6 +20,7 @@ dynamically links Qt 6 in a manner consistent with the LGPL.
 | FFmpeg | 7.1.1 | GNU Lesser General Public License v2.1 or later | LGPL-2.1-or-later |
 | nv-codec-headers | n12.2.72.0 | MIT License | MIT |
 | OpenCV | 4.x | Apache License 2.0 | Apache-2.0 |
+| LITIV Framework (ViBe, SuBSENSE, LBSP) | git, © 2015 | Apache License 2.0 | Apache-2.0 |
 | Eigen | 3.x | Mozilla Public License 2.0 | MPL-2.0 |
 | libjpeg-turbo | 3.x | BSD 3-Clause + IJG + zlib | BSD-3-Clause |
 | libcurl | recent | curl license (MIT/X derivative) | curl |
@@ -187,6 +188,30 @@ License text: see Appendix A (Apache-2.0).
 
 Copyright notices are reproduced from the OpenCV upstream `LICENSE` file and
 preserved in the OpenCV binaries shipped with Speculor.
+
+## LITIV Framework (ViBe, SuBSENSE, LBSP)
+
+- Project: <https://github.com/plstcharles/litiv>
+- Author: Pierre-Luc St-Charles and contributors
+- Copyright: © 2015 Pierre-Luc St-Charles
+- License: Apache License 2.0.
+
+Speculor's `vibe_bgs` and `subsense_bgs` motion-analysis plugins build on
+background-subtraction code that derives from the LITIV Framework: the ViBe
+sampler, the SuBSENSE change detector, and the Local Binary Similarity Pattern
+(LBSP) descriptor. That code is compiled into Speculor's bundled `spclib`
+helper library.
+
+License text: see Appendix A (Apache-2.0). Some LITIV source is itself
+reimplemented from OpenCV; the OpenCV license (Apache-2.0, above) therefore
+also applies to those portions.
+
+**Patent note.** The ViBe algorithm (Barnich & Van Droogenbroeck, University of
+Liège) is covered by patents in some jurisdictions. The Apache-2.0 patent grant
+in the LITIV license is made by the LITIV authors and does not extend to the
+underlying ViBe patent held by third parties. Recipients are responsible for
+determining whether use of the ViBe-based motion detector requires a patent
+license in their jurisdiction.
 
 ## Eigen
 
