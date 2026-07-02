@@ -32,7 +32,7 @@ The same `.speculor` project runs under any frontend — graph, parameters, dash
 | Domain                  | Examples                                                                                              |
 |-------------------------|-------------------------------------------------------------------------------------------------------|
 | **Video sources**       | FFmpeg / RTSP cameras, V4L2, QHY astronomical cameras, image folders, pattern generators              |
-| **Audio**               | System input/output, mixer, frequency filtering, noise reduction, oscilloscope, spectrum analyzer     |
+| **Audio**               | System input/output, mixer, frequency filtering, noise reduction, oscilloscope, audio spectrum        |
 | **SDR**                 | RTL-SDR, WinRadio G3x / G39, I/Q demod, radio tuner, direction finder, signal classifier              |
 | **ADS-B**               | dump1090 source, SBS source, decoder, MLAT client, filter, statistics, aircraft enricher, replay      |
 | **GPS & telemetry**     | NMEA sources, static GPS, system stats, weather feeds, Home Assistant bridge                          |
