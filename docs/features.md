@@ -1,13 +1,14 @@
 # Application features
 
-UI reference for `speculor_app`. For the engine internals that back these features, see [architecture.md](architecture.md) → [engine-internals.md](engine-internals.md). For first-pipeline orientation, see [getting-started.md](getting-started.md).
+UI reference for `speculor_app`. For first-pipeline orientation, see [getting-started.md](getting-started.md). For what each plugin does, see [plugins.md](plugins.md).
 
-## Two views
+## Three views
 
-The main window has two top-level views, switched via the toolbar or `Ctrl+1` / `Ctrl+2`:
+The main window has three top-level views, switched via the toolbar or `Ctrl+1` / `Ctrl+2` / `Ctrl+3`:
 
 - **Pipeline Configuration** — node-graph editor (built on QtNodes). Drag plugins from the Modules dock onto the canvas, connect ports, edit parameters in Node Properties.
 - **Visualization** — gadget canvas (free-form layout of video, plot, indicator, control, and utility widgets). Multiple named layouts per project; presentation mode (F11) hides handles.
+- **Recordings** (`Ctrl+3`) — browser for recorded sessions: cards with a poster cover, project name, and hover event thumbnails. From here you open a session into Session Replay or run the pipeline from a recording (reinjection replay). Personal tier. See [recording.md](recording.md).
 
 A floating **Mask Editor** and **Camera Azimuth Finder** are launched from the Tools menu and are not view tabs.
 
@@ -21,6 +22,7 @@ A floating **Mask Editor** and **Camera Azimuth Finder** are launched from the T
 - **Connection waypoints** — double-click a connection to add a draggable bend point; double-click a handle to remove it. Waypoints persist in the project file with full undo/redo, and rendering uses piecewise cubic-bezier curves through them.
 - **Node customisation** — per-node colour, text colour, display name, disable / bypass flag, and an opt-in gear-overlay button (corner configurable per node).
 - **Plugin browser** — categorised tree with live search, drag-and-drop to canvas, right-click context menu, and three independently collapsible accordion sections: **Modules**, **Recipes**, **Virtual Plugins**.
+- **DDS exposure** (Personal tier) — right-click a node → **Expose via DDS** to publish output ports onto a Fast DDS domain for other Speculors. Exposed nodes carry a blue **DDS** badge, and each port's encoding + QoS is set from **Configure…** in the Node Properties → DDS group. See [dds.md](dds.md).
 
 ### Edit operations (view-aware)
 
@@ -49,16 +51,17 @@ Reusable, pre-wired node-group templates stored as JSON in `templates/recipes/`.
 - **Browse**: Recipes section in the Modules dock; canvas right-click menu.
 - **Instantiate**: double-click, drag onto canvas, or right-click canvas → Recipes submenu.
 - **Built-in recipes**: shipped under `<exe_dir>/templates/recipes/`, shown muted (read-only).
-- **User recipes**: writable, stored under `QStandardPaths::AppDataLocation + "/recipes/"`, deletable from the browser.
+- **User recipes**: writable, stored under `<install_dir>/user/recipes/` (falls back to the per-user data location if the install dir is read-only), deletable from the browser.
 - **Validation**: missing plugins are detected and reported before instantiation.
 
 ## Visualization
 
 - **Gadget-based** — display widgets (video, data, plots, histograms, maps, timelines, heatmaps), control widgets (button, slider, combobox, radio, text, color picker, XY pad), indicators (label, LED, gauge), and utilities (group frame, profiler overlay, log viewer).
 - **Self-registering gadget architecture** — new gadget types are added without touching framework files; each gadget registers itself and exposes its own settings.
-- **Properties panel** — auto-generated settings UI from each gadget's `declare_properties()`.
+- **Properties panel** — auto-generated settings UI from each gadget's declared properties.
 - **Multiple layouts per project** — create, rename, delete, switch, set a default; persisted alongside the graph.
-- **Canvas features** — background images, resolution presets, snap-to-grid, zoom controls.
+- **Canvas features** — background images, resolution presets, snap-to-grid, zoom controls (Ctrl+wheel zooms to the cursor; middle-mouse drag pans; scroll bars appear when zoomed in).
+- **Playback controls** — **Pause/Resume** freezes the canvas display while the pipeline keeps running underneath (mirrors the Preview pane's Live/Freeze); **Screenshot** captures the dashboard at full resolution, copies it to the clipboard, and offers to save it to a PNG/JPEG file.
 - **Fullscreen presentation** (`F11`) — reparents the canvas into a top-level window, hides handles, keeps gadgets interactive, auto-hiding overlay with close + layout-switcher.
 - **MJPEG streaming** — each layout has its own port / quality / FPS / resolution + an `enabled` flag, persisted inside the `.speculor` project file. Multiple layouts can stream simultaneously; toggling on a layout pops up an HTTP MJPEG server while the pipeline is running. Same broadcaster works headlessly under `speculor_cli` (offscreen Qt). Render uses libjpeg-turbo; clean-canvas frames are reused via `QImage::cacheKey()` so idle dashboards don't re-encode.
 
@@ -70,11 +73,13 @@ Four tabified docks at the bottom of the main window, toggleable from **View →
 |-------|---------|
 | **Preview** | Live OpenGL video frame display with live/freeze controls and a frame info overlay (size, format, GPU vs CPU origin). |
 | **Stats** | Selected node statistics (FPS, latency, frames processed/dropped, errors, health state) plus an all-nodes breakdown with cumulative pipeline latency. |
-| **Data Inspector** | Tabular view of `SpcTable` / `SpcRecord` / `SpcScalar` data from any node port. |
+| **Data Inspector** | Live view of any non-frame node-port output: scalars, tables, records (JSON), plus signals (audio/SDR samples — waveform sparkline + metadata + sample table), bitstream packets (codec / flags / resolution / measured bitrate + hex payload peek), and control messages (message type + parameter entries). |
 | **Profiler** | Per-node timing visualization with click-to-dim filtering. |
 | **Log** | Severity-filtered log viewer fed by both engine and plugin output. |
 
 Visibility is gated by the engine's resource model — hidden / tabbed-behind panels don't poll the engine, so they consume zero CPU until shown again.
+
+The side docks — **Modules** (left) and **Node Properties** (right) — are likewise toggleable from **View → Pipeline**, so a panel closed via its title-bar ✕ can always be reopened from the menu.
 
 ## Tools
 
@@ -82,6 +87,17 @@ Visibility is gated by the engine's resource model — hidden / tabbed-behind pa
 - **Zone Editor** — modeless dialog for defining detection / exclusion zones.
 - **Camera Azimuth Finder** — modeless side-by-side dialog (camera frame preview + OpenStreetMap pane) for discovering a camera's real GPS / azimuth / elevation / horizontal & vertical FOV by pointing it at a known landmark. Uses Open-Meteo DEM (Copernicus ~90 m) for true-elevation alignment and horizon-dip correction. Writes the discovered values back onto the selected camera node via a parameter-alias map.
 - **Pipeline Validator** — graph-level checks: unconnected blocking ports, schema mismatches, cycles, missing plugins, fan-in (two or more sources targeting the same input port), unreachable nodes, missing mandatory parameters. Available manually via Tools → Validate Pipeline, and run automatically on every Play — errors block start and pop the validator dialog; warnings/info do not block.
+- **SAPIENT Console** (Tools → Extensions → SAPIENT Console) — live status of the **SAPIENT** interoperability extension (role, endpoint, connection state, detections sent/received, tasks) plus a reachability probe. SAPIENT (NATO BSI Flex 335 v2.0) is configured under Settings → Extensions and is **Team-tier** gated. See [sapient.md](sapient.md).
+- **DDS Console** (Tools → Extensions → DDS Console) — browses live Speculor instances on the Fast DDS domain and lists their exposed streams. Select a stream, pick a target `dds_subscribe` node from the **Bind to:** dropdown, and click **Bind stream** to wire it. Works with the engine stopped (its own read-only participant). **DDS** interoperability is configured under Settings → Extensions and is **Personal-tier** gated. See [dds.md](dds.md).
+
+## Extensions
+
+Interoperability **extensions** plug the engine into other systems. Each one self-registers its own console (Tools → Extensions) and its own settings page (Preferences → Extensions), and is licence-tier gated:
+
+| Extension | Tier | What it does |
+|-----------|------|--------------|
+| **Fast DDS** | Personal | Speculor ↔ Speculor: expose any node's output ports on a DDS domain, subscribe to remote streams as ordinary source nodes, share one disciplined clock, opt-in remote parameters. See [dds.md](dds.md). |
+| **SAPIENT** | Team | NATO/UK Dstl BSI Flex 335 v2.0 sensor interoperability: act as a sensor (ASM), a fusion node (HLDMM), or both; fusion nodes chain. See [sapient.md](sapient.md). |
 
 ## Plugin config panel
 
@@ -101,16 +117,17 @@ All three surfaces (Node Properties, Plugin Config Panel, Plugin Config Gadget) 
 - **Profiler panel** — per-node timing visualization.
 - **Log panel** — severity-filtered, fed by engine + plugin output.
 - **Node graph stats overlay** — per-node FPS / latency rendered directly on the graph.
-- **Plugin health watchdog** — automatic detection of hung or crashed plugins, automatic restart up to N retries, cascade-disable of downstream nodes on persistent failure. Tunable in Preferences → Reliability — see [preferences.md](preferences.md#reliability).
-- **`crash_guard`** — wraps each plugin's `process()` in an SEH (Windows) / signal-handler (POSIX) trap, captures up to 32 stack frames on crash, symbolicates via DbgHelp / libunwind. Build with `--with-pdb` / `-WithPDB` to resolve to file:line — see [troubleshooting.md → crash_guard](troubleshooting.md#crash_guard-stack-traces-show-raw-addresses).
+- **Plugin health watchdog** — automatic detection of hung or crashed plugins, automatic restart up to N retries, cascade-disable of downstream nodes on persistent failure. Tunable in Preferences → Reliability — see [preferences.md](preferences.md#reliability--node-watchdog).
+- **`crash_guard`** — wraps each plugin's `process()` in an SEH (Windows) / signal-handler (POSIX) trap, captures up to 32 stack frames on crash, symbolicates via DbgHelp / libunwind. See [troubleshooting.md → crash_guard](troubleshooting.md#crash_guard-stack-traces-show-raw-addresses).
 
 ## GPU compute
 
 - **Vulkan acceleration** — optional per-plugin GPU compute for image filters and motion analysis. Auto-detected at startup; per-plugin toggle (`gpu_enabled`).
 - **GPU-resident frame passing** — frames stay on the GPU between GPU-capable plugins; no PCIe round-trip.
-- **Zero-cost CPU readback** — GPU work always copies to a persistently-mapped staging buffer in the same command buffer; CPU consumers get data via `memcpy`, no extra GPU submission.
+- **Zero-cost CPU readback** — when an output has a CPU consumer, GPU work copies to a persistently-mapped staging buffer in the same command buffer; CPU consumers get data via `memcpy`, no extra GPU submission. Outputs with only GPU consumers stay resident-only (no staging copy recorded).
 - **Automatic CPU↔GPU transfers** — the engine auto-uploads CPU frames to GPU for GPU consumers and auto-downloads for CPU consumers. Plugins don't manage transfers.
-- **Mid-run `DEVICE_LOST` recovery** — the engine rebuilds a profile's `VkDevice` and restarts the affected nodes when a plugin sets `device_lost` during execution. See [engine-internals.md](engine-internals.md).
+- **GPU pipeline depth** — a coalesced GPU subgraph can run several frames in flight. Tunable in Preferences → Performance (default `2`, range `1`–`3`) — see [preferences.md](preferences.md#performance).
+- **Mid-run `DEVICE_LOST` recovery** — the engine rebuilds a profile's Vulkan device and restarts the affected nodes when a plugin reports a lost device during execution.
 - **Preview GPU/CPU indicator** — the Preview info label shows which side the displayed frame originated on.
 
 ## Help dialogs
@@ -122,8 +139,8 @@ All three surfaces (Node Properties, Plugin Config Panel, Plugin Config Gadget) 
 
 ## Project file format
 
-Pipelines save as JSON with the `.speculor` extension — graph, parameters, visualization layouts, connection waypoints, presets, node groups, per-node display options. See [project-format.md](project-format.md) for the schema.
+Pipelines save as JSON with the `.speculor` extension — graph, parameters, visualization layouts, connection waypoints, presets, node groups, per-node display options, and DDS exposure. See [project-format.md](project-format.md) for the schema.
 
 ## Theme
 
-Dark UI with a Catppuccin-inspired QSS in `app/resources/styles/dark_theme.qss`. Disabled menu items render in a muted colour so the view-aware Edit menu's enabled state is visible at a glance.
+Dark, Catppuccin-inspired UI. Disabled menu items render in a muted colour so the view-aware Edit menu's enabled state is visible at a glance.
