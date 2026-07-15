@@ -48,9 +48,13 @@ Speculor projects are serialized as JSON via [nlohmann/json](https://github.com/
       {
         "name": "Operator",
         "default": true,
-        "gadgets": [ { "...": "..." } ]
+        "gadgets": [ { "...": "..." } ],
+        "stream": { "enabled": true, "port": 8080, "quality": 75, "fps": 15, "resolution_mode": 0 }
       }
     ]
+  },
+  "interop": {
+    "dds": { "exposed_ports": [ { "node": 3, "port": 0 } ] }
   }
 }
 ```
@@ -64,8 +68,13 @@ Speculor projects are serialized as JSON via [nlohmann/json](https://github.com/
 | `connection_waypoints` | optional | Optional bend points for connection routing. Key format: `outNode:outPort-inNode:inPort`; value is an ordered array of `[x, y]` waypoints. Stale entries (for deleted connections) are pruned lazily on save. |
 | `node_groups` | optional | Visual groupings of nodes (lock / move / delete / copy / paste together). |
 | `visualizations` | optional | Named gadget layouts for the Visualization view. One layout may be marked `default`. |
+| `interop` | optional | Graph-level interoperability config. `interop.dds.exposed_ports` lists `{node, port}` pairs exposed on the Fast DDS domain (Personal tier). |
 
-`connection_waypoints`, `node_groups`, and `visualizations` are all optional — older project files predate them and continue to load.
+`connection_waypoints`, `node_groups`, `visualizations`, and `interop` are all optional — older project files predate them and continue to load.
+
+`interop` is **graph-level**, not per-node: `interop.dds.exposed_ports` lists `{node, port}` pairs (node ID + output-port ordinal) exposed on the DDS domain, each with optional per-port `encoding` / `qos` sub-objects. It is deliberately not a per-node field, so copy/paste/duplicate never silently duplicates network egress; stale entries for deleted nodes are pruned lazily. See [dds.md](dds.md).
+
+Each Visualization layout may also carry an optional `stream` block — MJPEG streaming config (`port`, `quality`, `fps`, `resolution_mode`, `enabled`). It is omitted when at defaults, so untouched legacy projects round-trip without spurious diffs; both `speculor_app` and `speculor_cli` consume it.
 
 ## Node fields
 
@@ -93,7 +102,7 @@ The engine validates schema compatibility (`SpcPortSchema`) on connection creati
 
 ## Loading and the engine
 
-`spc::ProjectFile::load(graph, path)` populates a `PipelineGraph` from the JSON. The engine then `build()`s a flattened, scheduled execution graph from the model. See [engine-internals.md](engine-internals.md) for the full lifecycle.
+Loading populates the pipeline graph from the JSON; the engine then builds a flattened, scheduled execution graph from it.
 
 When the GUI loads a project it also rebuilds the Visualization layouts, restores connection waypoints into the `ConnectionWaypointStore`, and re-establishes preview subscriptions. The CLI runner skips visualization and preview state.
 

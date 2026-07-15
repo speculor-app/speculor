@@ -2,9 +2,11 @@
 
 Application-wide preferences live in `QSettings` under `preferences/*`. Open the dialog with **Edit → Preferences…** (`Ctrl+,`).
 
-The dialog has four groups: **Graphics**, **Interface**, **Reliability**, **Performance**. Graphics and Interface require an app restart (the GPU context isn't hot-swappable; `QT_SCALE_FACTOR` is read only at `QApplication` construction). Reliability and Performance apply at the next pipeline start.
+The dialog has seven pages, selected from the sidebar: **GPU**, **Interface**, **Reliability**, **Performance**, **Recording**, **Time Sync**, and **Extensions**. GPU and Interface require an app restart (the GPU context isn't hot-swappable; `QT_SCALE_FACTOR` is read only at `QApplication` construction). Reliability, Performance, and Recording apply at the next pipeline start; Time Sync applies immediately.
 
-## Graphics — GPU profiles
+The **Extensions** page is registry-driven: each interoperability extension self-registers its own settings page — tier-gated (DDS Personal, SAPIENT Team) — and its keys live under `extensions/<id>/*`, **not** `preferences/*`. See [dds.md](dds.md#configuration) and [sapient.md](sapient.md#configuration) for the per-extension keys.
+
+## GPU profiles
 
 GPU selection is modeled as a list of named **profiles**. Each profile maps a stable id to a physical device UUID. The special **Default** profile (id `"default"`) is always present, cannot be removed, and its name is fixed — it's what plugins fall back to when they aren't pinned to a specific profile.
 
@@ -41,8 +43,8 @@ Stored as a `QSettings::beginWriteArray("preferences/gpu/profiles")`:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `preferences/ui/scale_factor` | double | `1.0` | UI scale. Discrete presets: `0.75`, `1.0`, `1.25`, `1.50`, `1.75`, `2.0`. Multiplies Qt's per-monitor DPI scaling. **Restart required** — applied via `qputenv("QT_SCALE_FACTOR", …)` before `QApplication` construction. |
-| `preferences/ui/zoom_fit_on_open` | bool | `false` | If true, every project open zooms / pans the Pipeline view so all nodes fit (same as the ⛶ button). Applies immediately, no restart. |
-| `preferences/ui/node_stats_interval_ms` | int | `500` | Refresh period for the per-node stats badge (FPS / latency / drops / health) under each pipeline node. Combo presets: Off / 500 ms / 1 s / 2 s / 5 s (`0` = badges hidden, timer stopped). Engine measurement window (`kLatencyWindowSeconds`) is unaffected — only the UI poll cadence. Applies immediately, no restart. |
+| `preferences/ui/zoom_fit_on_open` | bool | `true` | If true, every project open zooms / pans the Pipeline view so all nodes fit (same as the ⛶ button). Applies immediately, no restart. |
+| `preferences/ui/node_stats_interval_ms` | int | `1000` | Refresh period for the per-node stats badge (FPS / latency / drops / health) under each pipeline node. Combo presets: Off / 500 ms / 1 s / 2 s / 5 s (`0` = badges hidden, timer stopped). The engine's own measurement window is unaffected — only the UI poll cadence. Applies immediately, no restart. |
 
 ## Reliability — node watchdog
 
@@ -63,12 +65,56 @@ Maps 1:1 onto `spc::NodeWatchdog::Config`. Timeouts are stored in **milliseconds
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `preferences/engine/pool/frame_count` | int | `32` | Pre-allocated frame pool size. Clamped by the engine to `[4, 64]`. Larger = more concurrency, more memory. |
+| `preferences/engine/gpu/pipeline_depth` | int | `2` | Coalesced-GPU-subgraph frames kept in flight (K-deep async pipelining); `1` = synchronous. Range `[1, 3]`. Applies at next pipeline Start. Costs ~Kx the data-path VRAM. Headless equivalent: `--pipeline-depth=<N>` — see [cli.md](cli.md). |
+
+## Recording
+
+The recording & replay feature set is **experimental** and requires a **Personal** licence or higher — below that the page is disabled. See [recording.md](recording.md) for what these do; [cli.md](cli.md#recording-storage-budgets) lists the headless equivalents.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `recording/directory` | QString | empty | Session folder. Empty = `Documents/Speculor/recordings`. |
+| `recording/mode` | int | `0` | Capture mode: `0` Sources (only data-source nodes — leanest, replays by reinjection), `1` Full (every node — scrubs faithfully, much larger). |
+| `recording/preroll_seconds` | int | `0` | Pre-record ring. `0` = off; `> 0` arms a standby ring at Play, and the **● Record** button becomes the incident trigger. |
+| `recording/raw_codec` | QString | `auto` | Encode used for sources with no compressed stream (USB / synthetic / astro): `auto` (H.264, FFV1 fallback), `h264`, or `ffv1` (lossless). |
+| `recording/part_mb` | int | `1024` | Video part roll size — long recordings segment at this size, keyframe-aligned. |
+| `recording/mcap_part_mb` | int | `512` | Structured-traffic part roll size. |
+| `recording/spool_mb` | int | `64` | Per-recorder RAM spool cap. Bounds recorder memory; overflow is recorded as a gap. |
+| `recording/min_free_mb` | int | — | Pause recording when free disk space falls below this. |
+| `recording/budget_mb` | int | `0` | Total on-disk budget for a session. `0` = unlimited; otherwise the oldest parts are ring-deleted. |
+
+## Time Sync
+
+Disciplines the shared high-precision clock every plugin reads, so timestamps are comparable across sources (triangulation, multi-sensor fusion, federation) and traceable to UTC. Applies immediately — no restart, no pipeline Stop/Start.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `preferences/time/source` | int | `0` | `0` Auto (trust the OS-disciplined system clock + its sync quality — reflects a PTP/NTP grandmaster when the OS is disciplined by `ptp4l`/chrony), `1` NTP (built-in SNTP client), `2` Manual (fixed offset), `3` Off. |
+| `preferences/time/ntp_server` | QString | `pool.ntp.org` | NTP server for the built-in SNTP client (source = NTP). |
+| `preferences/time/est_error_floor_ms` | int | `1` | Lower bound on the reported clock-error estimate (clamps coarse OS reports, e.g. Windows). |
+| `preferences/time/manual_offset_ms` | int | `0` | Fixed offset added to the system clock (source = Manual). |
+
+A GPS+PPS source plugin can discipline the clock with sub-microsecond accuracy independently of this setting; it overrides the selected source automatically by priority. The live source / offset / estimated error / lock state appear in the **Stats** panel's *Time Sync* row.
+
+When an instance follows a DDS time master, set this to **Off** — running both disciplines steers the clock from two sources. See [dds.md](dds.md#time-sync).
+
+## Extensions
+
+Registry-driven — each interoperability extension contributes its own page, and its keys live under `extensions/<id>/*` rather than `preferences/*`:
+
+| Extension | Tier | Keys | Reference |
+|-----------|------|------|-----------|
+| **Fast DDS** | Personal | `extensions/dds/*` | [dds.md](dds.md#configuration) |
+| **SAPIENT** | Team | `extensions/sapient/*` | [sapient.md](sapient.md#configuration) |
+
+Below the required tier a page is visible but disabled.
 
 ## Apply model
 
-- **Graphics / Interface** → app restart required. The dialog offers **Restart Now** / **Later** / **Cancel** when one of these is changed.
-- **Reliability / Performance** → applied at the next `PipelineEngine::start()`. `MainWindow::apply_engine_preferences()` reads QSettings and pushes the values to `engine_->set_watchdog_config()` and `engine_->set_pool_frame_count()` at the top of `on_play_clicked()` and `restart_pipeline()`. If the pipeline is currently running, Stop and Start to pick up new values.
-- Engine-section changes are **committed to QSettings independently** of the restart prompt — cancelling the restart prompt does not discard them.
+- **GPU / Interface** → app restart required. The dialog offers **Restart Now** / **Later** / **Cancel** when one of these is changed.
+- **Reliability / Performance** → applied at the next pipeline start. If the pipeline is currently running, Stop and Start to pick up new values.
+- **Time Sync** → applied immediately, and re-applied at startup so the persisted source is active from launch.
+- Engine-section changes are **committed independently** of the restart prompt — cancelling the restart prompt does not discard them.
 
 ## Environment overrides
 

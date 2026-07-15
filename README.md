@@ -44,6 +44,8 @@ The same `.speculor` project runs under any frontend — graph, parameters, dash
 | **Scripting**           | Embedded Python script node                                                                           |
 | **Output**              | Video recording, MJPEG / H.264 HTTP streaming                                                         |
 
+Full per-plugin listing and which bundle ships each one: [docs/plugins.md](docs/plugins.md).
+
 ## At a glance
 
 - Visual node-graph editor with port-type validation, undo/redo, multi-instance plugins, node groups, reusable recipes, and per-node customisation.
@@ -59,7 +61,7 @@ The same `.speculor` project runs under any frontend — graph, parameters, dash
 Releases for Windows, Linux, and macOS are on the [Releases page](https://github.com/speculor-app/speculor/releases). Each release ships:
 
 - **`speculor-app-<version>-<platform>.{zip,tar.xz}`** — the app + UI + Qt + SDK + shared runtime DLLs. Extract anywhere and run `speculor_app`.
-- **`speculor-bundle-<name>-<version>-<platform>.zip`** (one per plugin domain) — extract at the same install root to add capability bundles (adsb, sdr, audio, video-sources, image-filters, motion-analysis, detection, output, automation, scripting, …). The host app discovers them automatically.
+- **`speculor-bundle-<name>-<version>-<platform>.zip`** (one per plugin domain) — extract at the same install root to add capability bundles (adsb, sdr, audio, video-sources, image-filters, motion-analysis, detection, output, automation, scripting, …). The host app discovers them automatically. See [docs/plugins.md](docs/plugins.md) for what's in each bundle.
 
 ### Windows
 
@@ -88,6 +90,8 @@ xattr -dr com.apple.quarantine .
 
 Speculor uses license-key activation. On first launch you'll be prompted for a key — paste it into the activation dialog and the app authenticates against the licensing service. Once activated, the key is cached locally; the app falls back to a 14-day offline grace period if the licensing service is unreachable.
 
+Your licence **tier** decides what's unlocked — the headless CLI runner, MJPEG streaming, session recording & replay (Personal), DDS interoperability (Personal), and SAPIENT (Team). See [docs/licensing.md](docs/licensing.md).
+
 ## Basic usage
 
 Once the GUI is open in **Pipeline Configuration** view (`Ctrl+1`):
@@ -97,7 +101,8 @@ Once the GUI is open in **Pipeline Configuration** view (`Ctrl+1`):
 3. Select a node to edit its parameters in the **Node Properties** panel.
 4. Press **F5** to start / stop the pipeline.
 5. Switch to **Visualization** view (`Ctrl+2`) to assemble a dashboard.
-6. **File → Save Project** writes a `.speculor` JSON file.
+6. Browse and replay captured sessions in the **Recordings** view (`Ctrl+3`).
+7. **File → Save Project** writes a `.speculor` JSON file.
 
 Replay headless from a saved project:
 
@@ -113,8 +118,14 @@ See [docs/getting-started.md](docs/getting-started.md) for a longer walkthrough.
 |-------|----------|
 | First-pipeline tutorial | [docs/getting-started.md](docs/getting-started.md) |
 | Application UI reference | [docs/features.md](docs/features.md) |
+| Plugin catalog and bundles | [docs/plugins.md](docs/plugins.md) |
 | Headless CLI runner | [docs/cli.md](docs/cli.md) |
 | Preferences | [docs/preferences.md](docs/preferences.md) |
+| Session recording & replay | [docs/recording.md](docs/recording.md) |
+| DDS interoperability (Speculor ↔ Speculor) | [docs/dds.md](docs/dds.md) |
+| SAPIENT interoperability | [docs/sapient.md](docs/sapient.md) |
+| Licence tiers and activation | [docs/licensing.md](docs/licensing.md) |
+| Troubleshooting | [docs/troubleshooting.md](docs/troubleshooting.md) |
 | `.speculor` project file format | [docs/project-format.md](docs/project-format.md) |
 
 ## Support

@@ -9,7 +9,7 @@ A short walkthrough for building a first pipeline once Speculor is installed and
 speculor_app.exe                   # Windows
 ```
 
-The main window opens in **Pipeline Configuration** view (`Ctrl+1`). Three docks frame the central node-graph canvas:
+The main window opens in **Pipeline Configuration** view (`Ctrl+1`), one of three top-level views — **Pipeline** (`Ctrl+1`), **Visualization** (`Ctrl+2`), and **Recordings** (`Ctrl+3`). Three docks frame the central node-graph canvas:
 
 - **Modules** (left) — categorised list of every plugin discovered in the `plugins/` directory next to the app binary. Drag entries onto the canvas, or right-click the canvas to add nodes.
 - **Node Properties** (right) — auto-generated parameter editor for the currently selected node.
@@ -47,6 +47,16 @@ Switch to **Visualization** view (`Ctrl+2`). The canvas is a free-form layout fo
 
 **F11** enters fullscreen presentation mode (gadget handles hidden, gadgets remain interactive). The Visualization view can also broadcast over MJPEG (port / quality / FPS / resolution configurable from the toolbar settings dialog) so a browser or other consumer can pick up the canvas as a live video stream.
 
+## Record and review a run
+
+Switch to **Recordings** view (`Ctrl+3`) — the home for captured sessions and the single entry point for everything recording-related.
+
+1. Back in the Pipeline view, arm the **● Record** button on the transport bar and press **F5**. Speculor captures everything the pipeline produces into a session folder.
+2. Stop the run and switch to `Ctrl+3`. The session appears as a card with a poster frame, the pipeline summary, and an event timeline.
+3. **Open** it to scrub the recording on a timeline, or — for a sources-mode recording — to re-run the whole pipeline from the recording as if the cameras were live.
+
+Recording and replay require a **Personal** licence or higher and are experimental. See [recording.md](recording.md) for session layout, pre-record ("save the incident"), events, and export.
+
 ## Edit operations
 
 Both views share a view-aware Edit menu — undo / redo / cut / copy / paste / duplicate / delete dispatch to whichever view is active and stay disabled while they don't apply.
@@ -59,7 +69,7 @@ Both views share a view-aware Edit menu — undo / redo / cut / copy / paste / d
 | `Del` | Delete selection |
 | `Ctrl+G` | Group selected nodes (Pipeline view) |
 | `F5` | Toggle pipeline play / stop |
-| `Ctrl+1` / `Ctrl+2` | Switch between Pipeline and Visualization views |
+| `Ctrl+1` / `Ctrl+2` / `Ctrl+3` | Switch between Pipeline, Visualization, and Recordings views |
 | `F11` | Fullscreen Visualization view |
 | `Ctrl+,` | Open Preferences |
 
@@ -68,8 +78,12 @@ While the pipeline is running, mutating actions (cut/paste/duplicate/delete and 
 ## Where to next
 
 - [features.md](features.md) — UI reference: panels, tools, recipes, node groups, plugin config panel, azimuth finder.
-- [preferences.md](preferences.md) — every QSettings key the Preferences dialog touches.
+- [plugins.md](plugins.md) — the plugin catalog: what each plugin does and which bundle ships it.
+- [recording.md](recording.md) — recording and replaying sessions, and the Recordings view (Personal tier).
+- [preferences.md](preferences.md) — every setting the Preferences dialog touches.
 - [cli.md](cli.md) — running pipelines headless from a `.speculor` file.
 - [project-format.md](project-format.md) — `.speculor` JSON schema.
-- [plugin-development.md](plugin-development.md) — writing your own plugins against the SDK.
-- [architecture.md](architecture.md) → [engine-internals.md](engine-internals.md) — how the engine schedules graph execution.
+- [dds.md](dds.md) — connecting multiple Speculor instances over Fast DDS (Personal tier).
+- [sapient.md](sapient.md) — SAPIENT sensor interoperability (Team tier).
+- [licensing.md](licensing.md) — licence tiers, activation, and offline behaviour.
+- [troubleshooting.md](troubleshooting.md) — when something doesn't work.
