@@ -23,7 +23,8 @@ Several plugins are GPU-accelerated with Vulkan compute shaders and fall back to
 |--------|---------|--------------|
 | [`adsb`](#adsb) | 13 | ADS-B / Mode S: sources, decode, filtering, enrichment, map + camera overlays, feeding |
 | [`audio`](#audio) | 8 | Audio capture/playback, mixing, filtering, noise reduction, scope + spectrum |
-| [`sdr`](#sdr) | 16 | SDR receivers, spectrum/waterfall, demod, signal detection & modulation classification |
+| [`sdr`](#sdr) | 15 | SDR receivers, spectrum/waterfall, demod, signal detection & modulation classification |
+| [`passive-radar`](#passive-radar) | 4 | Coherent passive radar: KrakenSDR source, array calibration, range-Doppler correlator, map |
 | [`database`](#database) | 9 | SQLite / PostgreSQL / MongoDB — lookup, query, write |
 | [`video-sources`](#video-sources) | 5 | Cameras (USB/RTSP/file), astronomy cameras, stills, test patterns |
 | [`misc-sources`](#misc-sources) | 13 | GPS, weather, Home Assistant, system stats, scalars, DDS + SAPIENT ingest |
@@ -36,7 +37,7 @@ Several plugins are GPU-accelerated with Vulkan compute shaders and fall back to
 | [`output`](#output) | 6 | Recorders and streaming servers |
 | [`automation`](#automation) | 6 | Triggers, logic, scheduling, PTZ control |
 | [`scripting`](#scripting) | 1 | Embedded Python script node |
-| [`oss`](#oss) | 4 | Open-source plugins (ViBe, SuBSENSE, RTL-SDR, KrakenSDR) |
+| [`oss`](#oss) | 3 | Open-source plugins (ViBe, SuBSENSE, RTL-SDR) |
 
 Counts are the plugins in each distribution bundle for this release.
 
@@ -75,7 +76,7 @@ ADS-B plugins. Airspace/airport reference data ships in `plugins/adsb/data/`.
 
 ## sdr
 
-WinRadio receivers ship their vendor libraries in this bundle. For RTL-SDR / KrakenSDR see the [`oss`](#oss) bundle.
+WinRadio receivers ship their vendor libraries in this bundle. For RTL-SDR see the [`oss`](#oss) bundle; for KrakenSDR and the coherent passive-radar chain see [`passive-radar`](#passive-radar).
 
 | Plugin | Category | What it does |
 |--------|----------|--------------|
@@ -88,13 +89,27 @@ WinRadio receivers ship their vendor libraries in this bundle. For RTL-SDR / Kra
 | **Radio Tuner** | Signal/SDR/Filters | AM/FM broadcast radio tuner with interactive UI, stereo, scanning, and presets |
 | **Signal Classifier** | Signal/SDR/Analysis | Analyzes I/Q signal and classifies modulation type (CW, AM, FM, SSB) using spectral features. Detects signals above the noise floor and outputs center frequency, bandwidth, modulation type, and confidence |
 | **SDR Direction Finder** | Signal/SDR/Analysis | Estimates direction of arrival (bearing) by comparing phase between two coherent SDR receivers. Requires two SDRs with synchronized clocks (external reference) and known antenna spacing |
-| **Range-Doppler (Passive Radar)** | Signal/SDR/Analysis | Passive-radar correlator: cross-correlates a surveillance channel against a reference channel to produce a bistatic range-Doppler map and target detections. Both inputs must come from the same coherent receiver (e.g. two channels of a KrakenSDR) |
 | **Signal Detector** | Signal/SDR/Detection | Detects signals in an I/Q stream via Welch-averaged power spectrum and CFAR thresholding. Emits center frequency, bandwidth, power and SNR per emission — a "where in the band" front end for modulation classification |
 | **Burst Detector** | Signal/SDR/Detection | Time-domain pulse/burst detector for intermittent signals (ADS-B/Mode S, radar, transponders, ISM bursts) that an averaged-PSD detector misses. Correlates the Mode S preamble to label ADS-B |
 | **Modulation Classifier** | Signal/SDR/Detection | Detects emissions in an I/Q stream and classifies each one's modulation (CW/AM/SSB/FM and digital PSK/QAM/FSK/OFDM) from instantaneous statistics and higher-order cumulants |
 | **Deep Signal Classifier** | Signal/SDR/Detection | Detects emissions and classifies each one's modulation with a trained CNN (ONNX). High-accuracy path for digital modulations; runs on DirectML/CUDA/CoreML/CPU |
 | **Signal Fusion** | Signal/SDR/Detection | Joins the classical and deep modulation-classifier outputs into one consolidated signal table (frequency-clustered), with both verdicts and an agreement flag per emission |
 | **Signal Tracker** | Signal/SDR/Detection | Tracks fused signals across frames into stable, persistent stations: smoothed frequency, voted modulation, and hysteresis so detections stop jumping and flickering |
+
+## passive-radar
+
+Coherent **passive radar**: illuminate targets with an existing transmitter (an FM or DAB broadcast) and detect their echoes across a coherent multi-channel receiver. The chain is `KrakenSDR → Range-Doppler → Passive Radar Map`; add the **Coherent Array Calibrator** only when you want target *bearing* (direction finding), not just detection at a range and speed.
+
+This domain is young — the KrakenSDR source is `PREVIEW`, the correlator, calibrator and map are `EXPERIMENTAL`. **KrakenSDR** is open source and ships in the [speculor-plugins-oss](https://github.com/speculor-app/speculor-plugins-oss) passive-radar archive; the correlator, calibrator and map ship in the closed passive-radar archive. Both extract into `plugins/passive-radar/`.
+
+| Plugin | Category | What it does |
+|--------|----------|--------------|
+| **KrakenSDR** | Signal/SDR/Passive Radar/Sources | Streams five frequency-coherent I/Q channels from a KrakenSDR (5× R820T2 array sharing one TCXO), one signal port per channel. This is *frequency-coherent* capture — sample and phase alignment are done downstream, which is exactly what a passive-radar correlator needs. Open source; loads `librtlsdr` at runtime |
+| **Range-Doppler (Passive Radar)** | Signal/SDR/Passive Radar/Filter | The passive-radar correlator: cross-correlates a surveillance channel against a reference channel into a bistatic range-Doppler map plus target detections, with ECA direct-path/clutter cancellation. With ≥2 surveillance channels it also estimates each target's bearing and geolocation. Both inputs must come from the same coherent receiver |
+| **Coherent Array Calibrator** | Signal/SDR/Passive Radar/Filter | Measures each channel's integer sample lag and complex gain against the array's injected noise source and emits aligned channels. Needed for bearing / beamforming — not for plain detection, which the correlator self-calibrates |
+| **Passive Radar Map** | Signal/SDR/Passive Radar/Renderers | A slippy OpenStreetMap view centred on the receiver: range rings, the illuminator and its baseline, and each geolocated detection drawn with its bearing-uncertainty arc (a wedge, not a dot) |
+
+Both `range_doppler` and `pr_map` render to a **frame** port — bind a Video gadget (an Image Sink discards frames). KrakenSDR needs `librtlsdr` like RTL-SDR does; see the [`oss`](#oss) note.
 
 ## database
 
@@ -261,11 +276,12 @@ Open-source plugins, developed in the public [speculor-plugins-oss](https://gith
 | Plugin | Category | What it does | Licence notes |
 |--------|----------|--------------|---------------|
 | **RTL-SDR** | Signal/SDR/Sources | Streams I/Q data from RTL-SDR Blog V3 (R820T2) and V4 (R828D) receivers | Apache-2.0 plugin code; links librtlsdr (LGPL-2.1+) at runtime |
-| **KrakenSDR** | Signal/SDR/Sources | Streams five coherent I/Q channels from a KrakenSDR (5× R820T2 coherent RTL-SDR array). Frequency-coherent capture for passive radar / beamforming — phase calibration is a downstream node | Apache-2.0 plugin code; links librtlsdr (LGPL-2.1+) at runtime |
 | **ViBe BGS** | Analysis/Motion | ViBe background subtraction (CPU + Vulkan GPU) — outputs foreground mask | Apache-2.0; LITIV-derived; **ViBe is patent-encumbered** in some jurisdictions |
 | **SuBSENSE BGS** | Analysis/Motion | SuBSENSE background subtraction (CPU + Vulkan GPU) — high-quality color+texture BGS with adaptive per-pixel sensitivity (quality mode, not real-time at full resolution) | Apache-2.0; LITIV-derived |
 
-The RTL-SDR plugins load `librtlsdr` at runtime — if it's absent the device list shows `(no devices found)`. See [troubleshooting.md](troubleshooting.md#rtl-sdr-device-list-shows-no-devices).
+**KrakenSDR** is also open source (developed in the same repo) but ships in the [`passive-radar`](#passive-radar) bundle, alongside the correlator it feeds.
+
+RTL-SDR and KrakenSDR both load `librtlsdr` at runtime — if it's absent the device list shows `(no devices found)`. See [troubleshooting.md](troubleshooting.md#rtl-sdr-device-list-shows-no-devices).
 
 ## Hardware that needs a vendor driver
 
