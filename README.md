@@ -120,6 +120,7 @@ See [docs/getting-started.md](docs/getting-started.md) for a longer walkthrough.
 | Application UI reference | [docs/features.md](docs/features.md) |
 | Plugin catalog and bundles | [docs/plugins.md](docs/plugins.md) |
 | Passive radar | [docs/passive-radar.md](docs/passive-radar.md) |
+| Mounts and cued optical tracking | [docs/mounts.md](docs/mounts.md) |
 | Headless CLI runner | [docs/cli.md](docs/cli.md) |
 | Preferences | [docs/preferences.md](docs/preferences.md) |
 | Session recording & replay | [docs/recording.md](docs/recording.md) |

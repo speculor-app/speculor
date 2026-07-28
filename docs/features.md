@@ -21,7 +21,7 @@ A floating **Mask Editor** and **Camera Azimuth Finder** are launched from the T
 - **Schema-described data system** — each port carries a typed schema (`SpcPortSchema`). The engine validates compatibility when ports are connected; mismatches surface as visual cues on the connection.
 - **Connection waypoints** — double-click a connection to add a draggable bend point; double-click a handle to remove it. Waypoints persist in the project file with full undo/redo, and rendering uses piecewise cubic-bezier curves through them.
 - **Node customisation** — per-node colour, text colour, display name, disable / bypass flag, and an opt-in gear-overlay button (corner configurable per node).
-- **Plugin browser** — categorised tree with live search, drag-and-drop to canvas, right-click context menu, and three independently collapsible accordion sections: **Modules**, **Recipes**, **Virtual Plugins**.
+- **Plugin browser** — categorised tree with live search, drag-and-drop to canvas, right-click context menu, and three independently collapsible accordion sections: **Modules**, **Recipes**, **Virtual Plugins**. The Modules header shows how many modules the current search and filters leave visible, so narrowing the list gives immediate feedback. Categories are colour-coded, including the **Mounts** and **Scripting** domains.
 - **DDS exposure** (Personal tier) — right-click a node → **Expose via DDS** to publish output ports onto a Fast DDS domain for other Speculors. Exposed nodes carry a blue **DDS** badge, and each port's encoding + QoS is set from **Configure…** in the Node Properties → DDS group. See [dds.md](dds.md).
 
 ### Edit operations (view-aware)
@@ -59,22 +59,22 @@ Reusable, pre-wired node-group templates stored as JSON in `templates/recipes/`.
 - **Gadget-based** — display widgets (video, data, plots, histograms, maps, timelines, heatmaps), control widgets (button, slider, combobox, radio, text, color picker, XY pad), indicators (label, LED, gauge), and utilities (group frame, profiler overlay, log viewer).
 - **Self-registering gadget architecture** — new gadget types are added without touching framework files; each gadget registers itself and exposes its own settings.
 - **Properties panel** — auto-generated settings UI from each gadget's declared properties.
-- **Multiple layouts per project** — create, rename, delete, switch, set a default; persisted alongside the graph.
-- **Canvas features** — background images, resolution presets, snap-to-grid, zoom controls (Ctrl+wheel zooms to the cursor; middle-mouse drag pans; scroll bars appear when zoomed in).
+- **Multiple layouts per project** — create, rename, delete, switch, set a default, or **clone** an existing layout as the starting point for a variant; persisted alongside the graph.
+- **Canvas features** — background images, resolution presets, snap-to-grid, zoom controls (Ctrl+wheel zooms to the cursor; middle-mouse drag pans; scroll bars appear when zoomed in). Changing the canvas resolution offers to **scale every gadget proportionally**, so a dashboard built at 1080p can be retargeted to 4K without re-laying it out by hand.
 - **Playback controls** — **Pause/Resume** freezes the canvas display while the pipeline keeps running underneath (mirrors the Preview pane's Live/Freeze); **Screenshot** captures the dashboard at full resolution, copies it to the clipboard, and offers to save it to a PNG/JPEG file.
 - **Fullscreen presentation** (`F11`) — reparents the canvas into a top-level window, hides handles, keeps gadgets interactive, auto-hiding overlay with close + layout-switcher.
 - **MJPEG streaming** — each layout has its own port / quality / FPS / resolution + an `enabled` flag, persisted inside the `.speculor` project file. Multiple layouts can stream simultaneously; toggling on a layout pops up an HTTP MJPEG server while the pipeline is running. Same broadcaster works headlessly under `speculor_cli` (offscreen Qt). Render uses libjpeg-turbo; clean-canvas frames are reused via `QImage::cacheKey()` so idle dashboards don't re-encode.
 
 ## Bottom dock panels
 
-Four tabified docks at the bottom of the main window, toggleable from **View → Pipeline**:
+Five tabified docks at the bottom of the main window, toggleable from **View → Pipeline**:
 
 | Panel | Purpose |
 |-------|---------|
-| **Preview** | Live OpenGL video frame display with live/freeze controls and a frame info overlay (size, format, GPU vs CPU origin). |
-| **Stats** | Selected node statistics (FPS, latency, frames processed/dropped, errors, health state) plus an all-nodes breakdown with cumulative pipeline latency. |
+| **Preview** | Live OpenGL video frame display with live/freeze controls and a frame info overlay (size, format, GPU vs CPU origin). Alongside it sits a **stats column** — selected-node statistics (FPS, latency, frames processed/dropped, errors, health state) plus an all-nodes breakdown with cumulative pipeline latency and the time-sync state. |
 | **Data Inspector** | Live view of any non-frame node-port output: scalars, tables, records (JSON), plus signals (audio/SDR samples — waveform sparkline + metadata + sample table), bitstream packets (codec / flags / resolution / measured bitrate + hex payload peek), and control messages (message type + parameter entries). |
-| **Profiler** | Per-node timing visualization with click-to-dim filtering. |
+| **Events** | Timeline of events emitted anywhere in the pipeline, filterable by **severity** and **category**. Every event carries the node and plugin that emitted it — stamped by the host, not self-reported — so an event traces back to its origin without guesswork. *(Labelled "Markers" before 0.15.0.)* |
+| **Profiler** | Per-node timing visualization with click-to-dim filtering, plus app-wide CPU / memory / GPU history graphs. |
 | **Log** | Severity-filtered log viewer fed by both engine and plugin output. |
 
 Visibility is gated by the engine's resource model — hidden / tabbed-behind panels don't poll the engine, so they consume zero CPU until shown again.
@@ -86,6 +86,8 @@ The side docks — **Modules** (left) and **Node Properties** (right) — are li
 - **Mask Editor** — modeless dialog for drawing polygon, rectangle, and ellipse masks on captured frames. Imports/exports SVG.
 - **Zone Editor** — modeless dialog for defining detection / exclusion zones.
 - **Camera Azimuth Finder** — modeless side-by-side dialog (camera frame preview + OpenStreetMap pane) for discovering a camera's real GPS / azimuth / elevation / horizontal & vertical FOV by pointing it at a known landmark. Uses Open-Meteo DEM (Copernicus ~90 m) for true-elevation alignment and horizon-dip correction. Writes the discovered values back onto the selected camera node via a parameter-alias map.
+
+  It also solves from the **sky**. With the ephemeris overlay on, the Sun, Moon, naked-eye planets and bright stars are drawn at their computed positions for your time and location; click each one where it actually appears in the image and the **celestial solver** recovers the camera's full pose *and* its lens — azimuth, elevation, roll, focal length and distortion — by staged Levenberg-Marquardt fit. This is the accurate route for a camera with no usable landmarks: a night sky is a calibration target with known geometry. Markers can be toggled off once the fit is made.
 - **Pipeline Validator** — graph-level checks: unconnected blocking ports, schema mismatches, cycles, missing plugins, fan-in (two or more sources targeting the same input port), unreachable nodes, missing mandatory parameters. Available manually via Tools → Validate Pipeline, and run automatically on every Play — errors block start and pop the validator dialog; warnings/info do not block.
 - **SAPIENT Console** (Tools → Extensions → SAPIENT Console) — live status of the **SAPIENT** interoperability extension (role, endpoint, connection state, detections sent/received, tasks) plus a reachability probe. SAPIENT (NATO BSI Flex 335 v2.0) is configured under Settings → Extensions and is **Team-tier** gated. See [sapient.md](sapient.md).
 - **DDS Console** (Tools → Extensions → DDS Console) — browses live Speculor instances on the Fast DDS domain and lists their exposed streams. Select a stream, pick a target `dds_subscribe` node from the **Bind to:** dropdown, and click **Bind stream** to wire it. Works with the engine stopped (its own read-only participant). **DDS** interoperability is configured under Settings → Extensions and is **Personal-tier** gated. See [dds.md](dds.md).

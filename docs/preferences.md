@@ -64,8 +64,11 @@ Maps 1:1 onto `spc::NodeWatchdog::Config`. Timeouts are stored in **milliseconds
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `preferences/engine/pool/frame_count` | int | `32` | Pre-allocated frame pool size. Clamped by the engine to `[4, 64]`. Larger = more concurrency, more memory. |
+| `preferences/engine/pool/frame_count` | int | `16` | Pre-allocated frame pool depth. Clamped by the engine to `[4, 64]`. Larger = more buffering headroom, more memory. |
+| `preferences/engine/pool/frame_budget_mb` | int (MiB) | `0` | Optional per-pool memory cap; `0` = unlimited. A pool pre-allocates every slot, so depth × frame size is real memory — at the default depth a 20 MP RGB source costs roughly 930 MB in a single pool. A positive budget derives the depth per pool instead: large frames get fewer slots, small frames keep the full count. To guarantee N no-drop slots for a B-MB frame, set at least N × B. |
 | `preferences/engine/gpu/pipeline_depth` | int | `2` | Coalesced-GPU-subgraph frames kept in flight (K-deep async pipelining); `1` = synchronous. Range `[1, 3]`. Applies at next pipeline Start. Costs ~Kx the data-path VRAM. Headless equivalent: `--pipeline-depth=<N>` — see [cli.md](cli.md). |
+| `preferences/engine/diagnostics/resource_log_interval_s` | int (s) | `30` | Periodically log app memory (RSS), GPU memory and CPU% at DEBUG, including the change in RSS since the previous entry — what you need to tell a leak from a merely busy pipeline after the fact. `0` = Off. Logged only while the pipeline runs. |
+| `preferences/engine/diagnostics/gpu_submit_log_interval_s` | int (s) | `0` (Off) | Periodically log how many `vkQueueSubmit` calls the engine, plugins and transfer queue make per period — confirms GPU work is being coalesced into one submit per frame for a multi-plugin subgraph. |
 
 ## Recording
 

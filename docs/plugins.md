@@ -21,21 +21,22 @@ Several plugins are GPU-accelerated with Vulkan compute shaders and fall back to
 
 | Bundle | Plugins | What you get |
 |--------|---------|--------------|
-| [`adsb`](#adsb) | 13 | ADS-B / Mode S: sources, decode, filtering, enrichment, map + camera overlays, feeding |
+| [`adsb`](#adsb) | 14 | ADS-B / Mode S: sources, decode, filtering, enrichment, lifecycle events, map + camera overlays, feeding |
 | [`audio`](#audio) | 8 | Audio capture/playback, mixing, filtering, noise reduction, scope + spectrum |
-| [`sdr`](#sdr) | 15 | SDR receivers, spectrum/waterfall, demod, signal detection & modulation classification |
-| [`passive-radar`](#passive-radar) | 4 | Coherent passive radar: KrakenSDR source, array calibration, range-Doppler correlator, map |
+| [`sdr`](#sdr) | 16 | SDR receivers, spectrum/waterfall, demod, DAB/DAB+ radio, signal detection & modulation classification |
+| [`passive-radar`](#passive-radar) | 5 | Coherent passive radar: KrakenSDR source, array calibration, range-Doppler correlator, tracker, map |
 | [`database`](#database) | 9 | SQLite / PostgreSQL / MongoDB — lookup, query, write |
-| [`video-sources`](#video-sources) | 5 | Cameras (USB/RTSP/file), astronomy cameras, stills, test patterns |
+| [`video-sources`](#video-sources) | 6 | Cameras (USB/RTSP/file), astronomy cameras, stills, test patterns, simulated terrain |
 | [`misc-sources`](#misc-sources) | 13 | GPS, weather, Home Assistant, system stats, scalars, DDS + SAPIENT ingest |
-| [`image-filters`](#image-filters) | 13 | Resize, morphology, dewarp, homography, masking, stabilization, sync |
+| [`image-filters`](#image-filters) | 14 | Resize, morphology, dewarp, homography, masking, stabilization, pre-detector conditioning, sync |
 | [`data-filters`](#data-filters) | 3 | Field extraction, ground-plane mapping, GPS smoothing |
 | [`calibration`](#calibration) | 2 | Astrophotography master dark / bias / flat build + apply |
 | [`motion-analysis`](#motion-analysis) | 4 | Background subtraction and optical flow (mostly GPU) |
-| [`detection`](#detection) | 19 | Detection, classification, tracking, and multi-sensor fusion |
+| [`detection`](#detection) | 23 | Detection, classification, tracking, and multi-sensor fusion |
 | [`renderers`](#renderers) | 5 | Overlays and dashboard renderers |
 | [`output`](#output) | 6 | Recorders and streaming servers |
-| [`automation`](#automation) | 6 | Triggers, logic, scheduling, PTZ control |
+| [`automation`](#automation) | 4 | Triggers, logic, scheduling |
+| [`mounts`](#mounts) | 6 | Motorised mount + PTZ control, cued optical tracking, gunsight HUD |
 | [`scripting`](#scripting) | 1 | Embedded Python script node |
 | [`oss`](#oss) | 3 | Open-source plugins (ViBe, SuBSENSE, RTL-SDR) |
 
@@ -60,6 +61,7 @@ ADS-B plugins. Airspace/airport reference data ships in `plugins/adsb/data/`.
 | **ADS-B Exchange Feeder** | ADS-B/Integration | Feeds raw Mode-S/ADS-B data to ADS-B Exchange in Beast binary format |
 | **ADS-B Exchange Stats** | ADS-B/Integration | Posts aircraft statistics to ADS-B Exchange for feeder credit and the globe/anywhere map |
 | **MLAT Client** | ADS-B/Integration | Connects to ADS-B Exchange MLAT server, sends timestamped Mode-S messages, receives multilateration positions |
+| **ADS-B Events** | ADS-B/Filters | Emits aircraft lifecycle events — first seen, lost, emergency, squawk change — from any aircraft-table source, with a full aircraft snapshot attached to each event |
 
 ## audio
 
@@ -95,6 +97,7 @@ WinRadio receivers ship their vendor libraries in this bundle. For RTL-SDR see t
 | **Deep Signal Classifier** | Signal/SDR/Detection | Detects emissions and classifies each one's modulation with a trained CNN (ONNX). High-accuracy path for digital modulations; runs on DirectML/CUDA/CoreML/CPU |
 | **Signal Fusion** | Signal/SDR/Detection | Joins the classical and deep modulation-classifier outputs into one consolidated signal table (frequency-clustered), with both verdicts and an agreement flag per emission |
 | **Signal Tracker** | Signal/SDR/Detection | Tracks fused signals across frames into stable, persistent stations: smoothed frequency, voted modulation, and hysteresis so detections stop jumping and flickering |
+| **DAB Receiver** | Signal/SDR/Demod | Receives DAB and DAB+ digital radio: ensemble scan, service selection, audio out, plus the dynamic label and MOT slideshow. Favourites and tuning state persist across runs |
 
 ## passive-radar
 
@@ -108,6 +111,7 @@ This domain is young — the KrakenSDR source is `PREVIEW`, the correlator, cali
 | **Range-Doppler (Passive Radar)** | Signal/SDR/Passive Radar/Filter | The passive-radar correlator: cross-correlates a surveillance channel against a reference channel into a bistatic range-Doppler map plus target detections, with ECA direct-path/clutter cancellation. With ≥2 surveillance channels it also estimates each target's bearing and geolocation. Both inputs must come from the same coherent receiver |
 | **Coherent Array Calibrator** | Signal/SDR/Passive Radar/Filter | Measures each channel's integer sample lag and complex gain against the array's injected noise source and emits aligned channels. Needed for bearing / beamforming — not for plain detection, which the correlator self-calibrates |
 | **Passive Radar Map** | Signal/SDR/Passive Radar/Renderers | A slippy OpenStreetMap view centred on the receiver: range rings, the illuminator and its baseline, and each geolocated detection drawn with its bearing-uncertainty arc (a wedge, not a dot) |
+| **Passive Radar Tracker** | Signal/SDR/Passive Radar/Detection | Turns per-frame range-Doppler detections into persistent tracks, rejecting physically impossible range-rates before tracking and emitting track lifecycle events |
 
 Both `range_doppler` and `pr_map` render to a **frame** port — bind a Video gadget (an Image Sink discards frames). KrakenSDR needs `librtlsdr` like RTL-SDR does; see the [`oss`](#oss) note.
 
@@ -136,6 +140,7 @@ Vendor client libraries ship in this bundle.
 | **Pattern Source** | Sources/Video | Generates a scrolling gradient test pattern |
 | **QHY Camera** | Sources/Video | Captures video from QHY astronomy cameras (QHY183C, QHY5III178, …) |
 | **ZWO ASI Camera** | Sources/Video | Captures from ZWO ASI astronomy cameras (ASI183, ASI294, ASI2600, ASI678, …) |
+| **Simulated Camera** | Sources/Video | Renders terrain from a camera pose — position, orientation and lens — with the sun computed from time and location. Lets a full pipeline be exercised without hardware or daylight |
 
 ## misc-sources
 
@@ -172,6 +177,7 @@ Vendor client libraries ship in this bundle.
 | **Camera Sync** | Filters/Image | Synchronizes two camera streams by timestamp. Buffers recent frames and outputs the closest-matching pair |
 | **Frame Limiter** | Filters/Image | Limits frame rate by dropping frames. Target FPS mode sleeps to match output cadence; Decimation mode passes every Nth frame |
 | **Image Sink** | Filters/Image | Consumes image frames and discards them. Attach to a node to keep it running without a preview or recorder wired up |
+| **Image Preprocess** | Filters/Image | Live-tunable conditioning ahead of a detector — invert, brightness, contrast, gamma, morphology. Accepts a control edge so the tuning can be driven from a HUD while the pipeline runs |
 
 ## data-filters
 
@@ -224,6 +230,10 @@ ONNX Runtime and its providers ship in this bundle.
 | **Geolocation** | Analysis/Fusion | Projects pixel-space tracks to geodetic lat/lon/alt + ENU covariance from camera pose, sensor GPS, and a range model. Emits the canonical world-track schema consumed by [SAPIENT](sapient.md) |
 | **Geo Correlator** | Analysis/Fusion | Correlates visual tracks from cameras with ADS-B aircraft positions by projecting both to bearing/elevation space. Outputs matched pairs and unmatched visual tracks (potential unknown aircraft) |
 | **Audio Analyzer** | Analysis/Audio | Computes audio metrics: RMS, peak, crest factor, spectral centroid, dominant frequency, zero-crossing rate |
+| **Sky Object Detect** | Analysis/Detection | Size-agnostic detector for objects against sky, day or night. Auto polarity copes with a sunlit target on bright cloud; `bbox_padding` grows boxes for downstream tracking |
+| **Tracking Scorer** | Analysis/Detection | Scores tracking quality into a single objective a tuner or operator can optimise against |
+| **Drone Simulator** | Analysis/Detection | Generates synthetic drone tracks for exercising a detection and fusion pipeline without flying anything |
+| **Coherence Tracker** | Analysis/Tracking | Track-before-detect confirmation for dim point targets: per-axis constant-velocity Kalman with Mahalanobis-gated association, confirming only candidates that persist *and* move coherently. Pulls faint movers out of clutter where IoU trackers fail — pair with Dim Target Detect |
 
 ## renderers
 
@@ -257,9 +267,22 @@ These are terminal side-effect sinks — they're skipped during reinjection repl
 | **Alert Trigger** | Automation/Triggers | Monitors a scalar or table input and triggers alerts when conditions are met. Can log messages, output alert state, and send parameter commands to other nodes |
 | **Logic Gate** | Automation/Logic | Boolean logic on up to 4 scalar inputs (AND, OR, XOR, NAND, NOR, MAJORITY, THRESHOLD). Emits a control message on rising/falling edges to automate parameters on other nodes |
 | **Scheduler** | Automation/Logic | Changes parameters or applies presets on other nodes based on time-of-day schedules or day/night classification |
-| **PTZ Tracker** | Automation/Control | Closed-loop PTZ controller: selects a track and outputs velocity or position commands. Supports centering (PID) and acquisition (wide-to-PTZ) modes |
-| **ONVIF PTZ** | Automation/Control | Sends PTZ commands to an ONVIF-compatible camera via SOAP/HTTP. Accepts a command table with velocity or position values |
 | **Auto Tuner** | Automation/Control | Hill-climbs one integer parameter on a downstream node to maximise a tracking objective — live, in-engine |
+
+PTZ control moved to the [`mounts`](#mounts) bundle, alongside the motorised-mount plugins.
+
+## mounts
+
+Motorised mount and PTZ control, plus the cued-tracking chain that drives them. See [mounts.md](mounts.md) for how the pieces fit together. **Everything in this bundle is `EXPERIMENTAL`** — in daily use, but parameters still move between releases.
+
+| Plugin | Category | What it does |
+|--------|----------|--------------|
+| **Mount Director** | Mounts/Control | Points a mount at a geo target — fixed lat/lon/alt, fixed az/el, or a selected track — extrapolating and leading the target to cover cue latency. Closes a visual lock from the mount camera's own tracks, and enforces elevation/azimuth pointing limits |
+| **Mount HUD** | Mounts/Visualization | Gunsight overlay for the mount camera: reticle, lock box, magnified target inset, target info panel, and on-image steer pad. Sends operator commands back to the director, the mount and the preprocessor over control edges |
+| **Sky-Watcher Mount** | Mounts/Control | Drives Sky-Watcher AZ-GTi and Synta-protocol mounts over WiFi (UDP/TCP) or USB serial. Persistent alignment references, auto-align on connect, velocity feed-forward while tracking |
+| **ZWO AM Mount** | Mounts/Control | Drives ZWO AM5/AM3 mounts over USB serial or WiFi TCP using LX200. Alt-az or equatorial mode; per-axis rate control or GoTo-chase fallback |
+| **PTZ Tracker** | Mounts/Control | Closed-loop PTZ controller: selects a track and outputs velocity or position commands. Supports centering (PID) and acquisition (wide-to-PTZ) modes |
+| **ONVIF PTZ** | Mounts/Control | Sends PTZ commands to an ONVIF-compatible camera via SOAP/HTTP. Accepts a command table with velocity or position values |
 
 ## scripting
 
