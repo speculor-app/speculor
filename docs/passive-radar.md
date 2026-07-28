@@ -2,7 +2,7 @@
 
 **Passive radar** detects moving targets without transmitting anything. It listens to an existing broadcast transmitter — an FM or DAB station — and looks for the faint, time‑delayed, Doppler‑shifted echoes that same signal produces when it bounces off an aircraft. A *reference* antenna hears the transmitter directly; one or more *surveillance* antennas hear the echoes; cross‑correlating the two recovers each target's **bistatic range** and **range‑rate**, and with a coherent antenna array, its **bearing**.
 
-Speculor's passive‑radar chain is a domain of four plugins in the [`passive-radar`](plugins.md#passive-radar) bundle. It is a young domain — the source is `PREVIEW`, the correlator, calibrator and map are `EXPERIMENTAL`. There is no licence‑tier gate; you need the hardware, not a higher tier.
+Speculor's passive‑radar chain is a domain of five plugins in the [`passive-radar`](plugins.md#passive-radar) bundle. It is a young domain — the source is `PREVIEW`, the correlator, calibrator, tracker and map are `EXPERIMENTAL`. There is no licence‑tier gate; you need the hardware, not a higher tier.
 
 ```
                   reference antenna (at the transmitter)
@@ -22,10 +22,15 @@ For direction finding (bearing, not just range+speed) insert **coherent_calibrat
 |---|---|---|
 | **KrakenSDR** (`kraken_sdr`) | Five frequency‑coherent I/Q channels from a 5‑channel array | Always — the coherent source |
 | **Range‑Doppler** (`range_doppler`) | The correlator: reference × surveillance → range‑Doppler map + detections | Always — this *is* the radar |
+| **Passive Radar Tracker** (`pr_tracker`) | Turns per‑frame detections into persistent tracks | Following targets rather than watching blips |
 | **Passive Radar Map** (`pr_map`) | Slippy map of geolocated detections | Viewing results on a map |
 | **Coherent Array Calibrator** (`coherent_calibrator`) | Sample/phase‑aligns the array against its noise source | Bearing / beamforming **only** |
 
 Detection needs only the source and the correlator. The calibrator is for bearing.
+
+`pr_tracker` sits between the correlator and the map. A raw range‑Doppler detection is a single frame's opinion; the tracker associates detections across frames into tracks that persist through a missed frame or two, and **rejects physically impossible range‑rates before they ever reach association** — a target that would have had to accelerate implausibly between frames is a correlation artifact, not an aircraft. It emits track lifecycle events (appeared, updated, lost), so the Events panel and any downstream automation see the same track history you do.
+
+The correlator also publishes a **detection heartbeat** — noise floor, direct‑path ridge level and reference level — every cycle. When the map is empty, that heartbeat is what tells you whether the chain is starved, swamped by the direct path, or simply looking at quiet sky.
 
 ## The hardware: KrakenSDR
 
