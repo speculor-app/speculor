@@ -26,11 +26,11 @@ Several plugins are GPU-accelerated with Vulkan compute shaders and fall back to
 | [`sdr`](#sdr) | 16 | SDR receivers, spectrum/waterfall, demod, DAB/DAB+ radio, signal detection & modulation classification |
 | [`passive-radar`](#passive-radar) | 5 | Coherent passive radar: KrakenSDR source, array calibration, range-Doppler correlator, tracker, map |
 | [`database`](#database) | 9 | SQLite / PostgreSQL / MongoDB — lookup, query, write |
-| [`video-sources`](#video-sources) | 6 | Cameras (USB/RTSP/file), astronomy cameras, stills, test patterns, simulated terrain |
+| [`video-sources`](#video-sources) | 4 | Cameras (USB/RTSP/file), stills, test patterns, simulated terrain |
 | [`misc-sources`](#misc-sources) | 13 | GPS, weather, Home Assistant, system stats, scalars, DDS + SAPIENT ingest |
 | [`image-filters`](#image-filters) | 14 | Resize, morphology, dewarp, homography, masking, stabilization, pre-detector conditioning, sync |
 | [`data-filters`](#data-filters) | 3 | Field extraction, ground-plane mapping, GPS smoothing |
-| [`calibration`](#calibration) | 2 | Astrophotography master dark / bias / flat build + apply |
+| [`astro`](#astro) | 6 | Astrophotography: cooled QHY / ZWO cameras, field derotation, live stacking, master dark / bias / flat build + apply |
 | [`motion-analysis`](#motion-analysis) | 4 | Background subtraction and optical flow (mostly GPU) |
 | [`detection`](#detection) | 23 | Detection, classification, tracking, and multi-sensor fusion |
 | [`renderers`](#renderers) | 5 | Overlays and dashboard renderers |
@@ -138,8 +138,6 @@ Vendor client libraries ship in this bundle.
 | **Video Source** | Sources/Video | Reads video from USB cameras, URLs/streams, or video files |
 | **Image Source** | Sources/Video | Loads a static image from disk and outputs it as a frame (color or grayscale) |
 | **Pattern Source** | Sources/Video | Generates a scrolling gradient test pattern |
-| **QHY Camera** | Sources/Video | Captures video from QHY astronomy cameras (QHY183C, QHY5III178, …) |
-| **ZWO ASI Camera** | Sources/Video | Captures from ZWO ASI astronomy cameras (ASI183, ASI294, ASI2600, ASI678, …) |
 | **Simulated Camera** | Sources/Video | Renders terrain from a camera pose — position, orientation and lens — with the sun computed from time and location. Lets a full pipeline be exercised without hardware or daylight |
 
 ## misc-sources
@@ -187,14 +185,21 @@ Vendor client libraries ship in this bundle.
 | **Perspective Mapper** | Filters/Data | Transforms tracked object coordinates from pixel space to real-world ground-plane coordinates using a 4-point calibration homography. Adds world position (meters), speed (m/s), and distance fields to tracks |
 | **GPS Stabilizer** | Filters/GPS | Filters and stabilizes GPS data: rejects invalid fixes, smooths position jitter, and applies dead-zone suppression |
 
-## calibration
+## astro
 
-Astrophotography calibration. Optional FITS support ships in this bundle.
+Astrophotography, end to end: capture on a cooled camera, calibrate it, take the
+field rotation out, and stack. The camera SDKs (QHYCCD, ZWO ASI) and optional
+FITS support ship in this bundle, so it is self-contained — you do not also need
+`video-sources` for an astronomy camera.
 
 | Plugin | Category | What it does |
 |--------|----------|--------------|
-| **Master Frame Builder** | Filters/Calibration | Stacks N calibration frames into a master dark / bias / flat and writes it to disk (FITS or 32-bit TIFF). Passes frames through so it can sit inline in a capture graph |
-| **Frame Calibrator** | Filters/Calibration | Applies master dark / bias / flat to each light frame, matching the master to the light's exposure / gain / offset / read-mode / binning / temperature. Operates on raw Bayer (preserves the mosaic) |
+| **QHY Camera** | Astro/Sources | Captures video from QHY astronomy cameras (QHY183C, QHY5III178, …) |
+| **ZWO ASI Camera** | Astro/Sources | Captures from ZWO ASI astronomy cameras (ASI183, ASI294, ASI2600, ASI678, …) |
+| **Field Derotate** | Astro/Filters | Removes the field rotation an alt-azimuth mount introduces, so consecutive frames share one orientation and can be stacked. Driven by the mount's own pointing |
+| **Live Stack** | Astro/Filters | Integrates frames into a running mean, registering each against the first, so faint detail rises out of the noise as the stack deepens |
+| **Master Frame Builder** | Astro/Calibration | Stacks N calibration frames into a master dark / bias / flat and writes it to disk (FITS or 32-bit TIFF). Passes frames through so it can sit inline in a capture graph |
+| **Frame Calibrator** | Astro/Calibration | Applies master dark / bias / flat to each light frame, matching the master to the light's exposure / gain / offset / read-mode / binning / temperature. Operates on raw Bayer (preserves the mosaic) |
 
 ## motion-analysis
 
