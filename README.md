@@ -61,7 +61,7 @@ Full per-plugin listing and which bundle ships each one: [docs/plugins.md](docs/
 Releases for Windows, Linux, and macOS are on the [Releases page](https://github.com/speculor-app/speculor/releases). Each release ships:
 
 - **`speculor-app-<version>-<platform>.{zip,tar.xz}`** — the app + UI + Qt + SDK + shared runtime DLLs. Extract anywhere and run `speculor_app`.
-- **`speculor-bundle-<name>-<version>-<platform>.zip`** (one per plugin domain) — extract at the same install root to add capability bundles (adsb, sdr, audio, video-sources, image-filters, motion-analysis, detection, output, automation, scripting, …). The host app discovers them automatically. See [docs/plugins.md](docs/plugins.md) for what's in each bundle.
+- **`speculor-bundle-<name>-<version>-<platform>.zip`** (one per plugin domain) — extract at the same install root to add capability bundles (adsb, astro, sdr, audio, video-sources, image-filters, motion-analysis, detection, output, automation, scripting, …). The host app discovers them automatically. See [docs/plugins.md](docs/plugins.md) for what's in each bundle.
 
 ### Windows
 
