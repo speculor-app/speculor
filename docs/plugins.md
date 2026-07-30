@@ -28,9 +28,9 @@ Several plugins are GPU-accelerated with Vulkan compute shaders and fall back to
 | [`database`](#database) | 9 | SQLite / PostgreSQL / MongoDB — lookup, query, write |
 | [`video-sources`](#video-sources) | 4 | Cameras (USB/RTSP/file), stills, test patterns, simulated terrain |
 | [`misc-sources`](#misc-sources) | 13 | GPS, weather, Home Assistant, system stats, scalars, DDS + SAPIENT ingest |
-| [`image-filters`](#image-filters) | 14 | Resize, morphology, dewarp, homography, masking, stabilization, pre-detector conditioning, sync |
+| [`image-filters`](#image-filters) | 15 | Resize, morphology, dewarp, homography, masking, stabilization, focus measurement, pre-detector conditioning, sync |
 | [`data-filters`](#data-filters) | 3 | Field extraction, ground-plane mapping, GPS smoothing |
-| [`astro`](#astro) | 6 | Astrophotography: cooled QHY / ZWO cameras, field derotation, live stacking, master dark / bias / flat build + apply |
+| [`astro`](#astro) | 8 | Astrophotography: cooled QHY / ZWO cameras, field derotation, live stacking, stretching, full-precision FITS/TIFF output, master dark / bias / flat build + apply |
 | [`motion-analysis`](#motion-analysis) | 4 | Background subtraction and optical flow (mostly GPU) |
 | [`detection`](#detection) | 23 | Detection, classification, tracking, and multi-sensor fusion |
 | [`renderers`](#renderers) | 5 | Overlays and dashboard renderers |
@@ -176,6 +176,7 @@ Vendor client libraries ship in this bundle.
 | **Frame Limiter** | Filters/Image | Limits frame rate by dropping frames. Target FPS mode sleeps to match output cadence; Decimation mode passes every Nth frame |
 | **Image Sink** | Filters/Image | Consumes image frames and discards them. Attach to a node to keep it running without a preview or recorder wired up |
 | **Image Preprocess** | Filters/Image | Live-tunable conditioning ahead of a detector — invert, brightness, contrast, gamma, morphology. Accepts a control edge so the tuning can be driven from a HUD while the pipeline runs |
+| **Focus Meter** | Filters/Focus | Measures focus and draws it on the frame with a history trace and best-so-far marker. Star mode reports half-flux diameter for point sources; Contrast mode reports edge sharpness for extended daylight subjects such as aircraft. Emits the metric as a scalar and per-star measurements as a table |
 
 ## data-filters
 
@@ -198,6 +199,8 @@ FITS support ship in this bundle, so it is self-contained — you do not also ne
 | **ZWO ASI Camera** | Astro/Sources | Captures from ZWO ASI astronomy cameras (ASI183, ASI294, ASI2600, ASI678, …) |
 | **Field Derotate** | Astro/Filters | Removes the field rotation an alt-azimuth mount introduces, so consecutive frames share one orientation and can be stacked. Driven by the mount's own pointing |
 | **Live Stack** | Astro/Filters | Integrates frames into a running mean, registering each against the first, so faint detail rises out of the noise as the stack deepens |
+| **Astro Stretch** | Astro/Filters | Makes a linear frame visible: takes the black point from the frame's own background and applies a non-linear stretch, so faint detail comes up without the stars blowing out |
+| **Frame Writer** | Astro/Output | Writes frames as FITS, 32-bit TIFF or 16-bit PNG with the capture metadata in the header — full precision out, without a video codec |
 | **Master Frame Builder** | Astro/Calibration | Stacks N calibration frames into a master dark / bias / flat and writes it to disk (FITS or 32-bit TIFF). Passes frames through so it can sit inline in a capture graph |
 | **Frame Calibrator** | Astro/Calibration | Applies master dark / bias / flat to each light frame, matching the master to the light's exposure / gain / offset / read-mode / binning / temperature. Operates on raw Bayer (preserves the mosaic) |
 
@@ -317,8 +320,8 @@ Most plugins are self-contained. These need hardware support present on the mach
 
 | Plugin | Requirement |
 |--------|-------------|
-| **QHY Camera** | QHYCCD driver (vendor library ships in `video-sources`) |
-| **ZWO ASI Camera** | ZWO ASI driver |
+| **QHY Camera** | QHYCCD driver (vendor library ships in `astro`) |
+| **ZWO ASI Camera** | ZWO ASI SDK (vendor library ships in `astro`) |
 | **WinRadio G3x / G39** | WinRadio driver (vendor library ships in `sdr`) |
 | **RTL-SDR** / **KrakenSDR** | `librtlsdr` — see above |
 | **YOLO Detector (RKNN)** | Rockchip RK3588 NPU, aarch64-Linux only |
