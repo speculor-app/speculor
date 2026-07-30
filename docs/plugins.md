@@ -320,8 +320,8 @@ Most plugins are self-contained. These need hardware support present on the mach
 
 | Plugin | Requirement |
 |--------|-------------|
-| **QHY Camera** | QHYCCD driver (vendor library ships in `video-sources`) |
-| **ZWO ASI Camera** | ZWO ASI driver |
+| **QHY Camera** | QHYCCD driver (vendor library ships in `astro`) |
+| **ZWO ASI Camera** | ZWO ASI SDK (vendor library ships in `astro`) |
 | **WinRadio G3x / G39** | WinRadio driver (vendor library ships in `sdr`) |
 | **RTL-SDR** / **KrakenSDR** | `librtlsdr` — see above |
 | **YOLO Detector (RKNN)** | Rockchip RK3588 NPU, aarch64-Linux only |
