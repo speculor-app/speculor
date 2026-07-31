@@ -21,7 +21,7 @@ Several plugins are GPU-accelerated with Vulkan compute shaders and fall back to
 
 | Bundle | Plugins | What you get |
 |--------|---------|--------------|
-| [`adsb`](#adsb) | 14 | ADS-B / Mode S: sources, decode, filtering, enrichment, lifecycle events, map + camera overlays, feeding |
+| [`adsb`](#adsb) | 13 | ADS-B / Mode S: sources, decode, filtering, enrichment, lifecycle events, camera overlay, feeding. **The map display ships in [`oss`](#oss)** |
 | [`audio`](#audio) | 8 | Audio capture/playback, mixing, filtering, noise reduction, scope + spectrum |
 | [`sdr`](#sdr) | 16 | SDR receivers, spectrum/waterfall, demod, DAB/DAB+ radio, signal detection & modulation classification |
 | [`passive-radar`](#passive-radar) | 5 | Coherent passive radar: KrakenSDR source, array calibration, range-Doppler correlator, tracker, map |
@@ -38,13 +38,20 @@ Several plugins are GPU-accelerated with Vulkan compute shaders and fall back to
 | [`automation`](#automation) | 4 | Triggers, logic, scheduling |
 | [`mounts`](#mounts) | 6 | Motorised mount + PTZ control, cued optical tracking, gunsight HUD |
 | [`scripting`](#scripting) | 1 | Embedded Python script node |
-| [`oss`](#oss) | 3 | Open-source plugins (ViBe, SuBSENSE, RTL-SDR) |
+| [`oss`](#oss) | 4 | Open-source plugins (ViBe, SuBSENSE, RTL-SDR, ADS-B Display) |
 
 Counts are the plugins in each distribution bundle for this release.
 
 ## adsb
 
-ADS-B plugins. Airspace/airport reference data ships in `plugins/adsb/data/`.
+ADS-B plugins.
+
+> **The map display is in a different bundle.** **ADS-B Display** moved to
+> [`oss`](#oss), because its aircraft marker artwork is GPL-3.0 and cannot be
+> redistributed under this bundle's licence. A working ADS-B setup therefore needs
+> **both** bundles: `adsb` for the sources, decoder and enrichment, and `oss` for
+> the map. Airspace and airport reference data moved with it, to
+> `plugins/adsb_display/data/`.
 
 | Plugin | Category | What it does |
 |--------|----------|--------------|
@@ -56,7 +63,6 @@ ADS-B plugins. Airspace/airport reference data ships in `plugins/adsb/data/`.
 | **ADS-B Filter** | ADS-B/Filters | Filters aircraft table by altitude, distance, squawk codes, emergency status, military flag, and airborne state. Outputs matching and rejected aircraft as separate tables |
 | **ADS-B Statistics** | ADS-B/Filters | Computes aggregate statistics from ADS-B aircraft data: total count, altitude band distribution, unique ICAOs, message rate, emergency/military/ground counts |
 | **Aircraft Enricher** | ADS-B/Filters | Enriches aircraft data with registration, type, airline, and route information from adsbdb.com with hexdb.io fallback. Connect between any ADS-B source and display |
-| **ADS-B Display** | ADS-B/Visualization | Renders ADS-B aircraft positions on an OpenStreetMap tile map |
 | **ADS-B Overlay** | ADS-B/Visualization | Projects ADS-B aircraft positions onto a camera image using bearing/elevation geometry. Click aircraft for info panel |
 | **ADS-B Exchange Feeder** | ADS-B/Integration | Feeds raw Mode-S/ADS-B data to ADS-B Exchange in Beast binary format |
 | **ADS-B Exchange Stats** | ADS-B/Integration | Posts aircraft statistics to ADS-B Exchange for feeder credit and the globe/anywhere map |
@@ -304,8 +310,11 @@ This bundle is the largest — the embedded CPython runtime adds roughly 70 MB.
 
 Open-source plugins, developed in the public [speculor-plugins-oss](https://github.com/speculor-app/speculor-plugins-oss) repository. They install exactly like any other bundle.
 
+Most are Apache-2.0. **ADS-B Display is GPL-3.0** — the only copyleft plugin Speculor ships — because its aircraft marker shapes derive from tar1090. Redistributing it carries the GPL-3.0 source-availability obligation; that source is the repository above. It needs the [`adsb`](#adsb) bundle alongside it for the sources and decoder that feed it.
+
 | Plugin | Category | What it does | Licence notes |
 |--------|----------|--------------|---------------|
+| **ADS-B Display** | ADS-B/Visualization | Renders ADS-B aircraft on an OpenStreetMap tile map: type-specific silhouettes, airspace and airport layers, trails, tooltips and an aircraft list | **GPL-3.0** — marker artwork derives from [tar1090](https://github.com/wiedehopf/tar1090) |
 | **RTL-SDR** | Signal/SDR/Sources | Streams I/Q data from RTL-SDR Blog V3 (R820T2) and V4 (R828D) receivers | Apache-2.0 plugin code; links librtlsdr (LGPL-2.1+) at runtime |
 | **ViBe BGS** | Analysis/Motion | ViBe background subtraction (CPU + Vulkan GPU) — outputs foreground mask | Apache-2.0; LITIV-derived; **ViBe is patent-encumbered** in some jurisdictions |
 | **SuBSENSE BGS** | Analysis/Motion | SuBSENSE background subtraction (CPU + Vulkan GPU) — high-quality color+texture BGS with adaptive per-pixel sensitivity (quality mode, not real-time at full resolution) | Apache-2.0; LITIV-derived |
