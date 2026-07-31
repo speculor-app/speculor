@@ -15,7 +15,10 @@ speculor_cli <project.speculor> [plugin_dir] [options]
 | `--no-stream`     | off | Run engine only — skip binding any MJPEG ports even when layouts are flagged `stream.enabled`. |
 | `--stream-only=<layout-name>` | (all enabled) | Repeatable. Restrict streaming to the named layouts. |
 | `--log-stderr`    | off | Mirror log entries to stderr in addition to the log file. By default the CLI is silent on stderr (one startup banner aside) so stdout stays clean for redirection / piping. |
-| `--pipeline-depth=<N>` | `2` | GPU coalesced-subgraph frames kept in flight; clamped to `[1, 3]`. Headless equivalent of Preferences → Performance "GPU pipeline depth"; the CLI doesn't read the GUI's settings store, so this flag is the only headless control. |
+| `--pipeline-depth=<N>` | (preference) | GPU coalesced-subgraph frames kept in flight; clamped to `[1, 3]`. Overrides Preferences → Performance → "GPU pipeline depth". |
+| `--pool-frames=<N>` | (preference) | Frame pool depth in slots, clamped to `[4, 64]`. Frame pools are shared per `(width, height, format)` across **all** nodes and chains, so raise this when running many concurrent same-resolution sources. Costs `N × frame-size` of RAM per distinct geometry. Overrides Preferences → Performance. |
+| `--pool-budget-mb=<N>` | (preference) | Cap pool RAM per geometry; the pool depth is derived from it and the frame size. `0` = unlimited. Overrides Preferences → Performance. |
+| `--no-preferences` | off | Ignore the shared settings store entirely and run on built-in defaults — for reproducible CI runs that must not inherit local configuration. Command-line flags still apply. See [Configuration](#configuration). |
 | `--run-seconds=<N>` | off | Auto-stop cleanly after `N` seconds. |
 | `--license-file=<path>` | (cached file) | Use a licence file from an explicit path instead of the cached one. See [licensing.md](licensing.md#cli-usage). |
 | `--activate=<key>` | — | Activate this machine against a licence key, write the signed licence file, and exit. Optionally with `--machine-name=<name>`. |
@@ -26,9 +29,9 @@ Experimental, and gated to a **Personal** licence or higher in their entirety �
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--record[=<dir>]` | off | Record the whole pipeline to a session folder under `<dir>/<timestamp>/` (default `recordings/session`). Captures compressed video per source node, plus tables/scalars/records/control/signals/parameter writes/events/health as structured traffic. Long runs segment automatically; if the disk can't keep up, the loss window is recorded as a gap rather than stalling the pipeline. |
-| `--record-frames=all` | off | With `--record`: capture **every** node's frame outputs (intermediate stages), not just sources — the headless equivalent of Preferences → Recording → Capture mode = **Full**. |
-| `--record-standby=<sec>` | off | Pre-record standby (implies `--record`): the last `<sec>` seconds ring in RAM and nothing hits disk until the incident trigger fires — then past + live are recorded. An untriggered session is discarded on stop. |
+| `--record[=<dir>]` | off | Record the whole pipeline to a session folder under `<dir>/<timestamp>/`. Destination: `<dir>` if given, else the folder set in Preferences → Recording, else `recordings/session` relative to the working directory. Captures compressed video per source node, plus tables/scalars/records/control/signals/parameter writes/events/health as structured traffic. Long runs segment automatically; if the disk can't keep up, the loss window is recorded as a gap rather than stalling the pipeline. |
+| `--record-frames=all` | (preference) | With `--record`: capture **every** node's frame outputs (intermediate stages), not just sources. Forces Preferences → Recording → Capture mode = **Full** for this run. |
+| `--record-standby=<sec>` | (preference) | Pre-record standby (implies `--record`): the last `<sec>` seconds ring in RAM and nothing hits disk until the incident trigger fires — then past + live are recorded. An untriggered session is discarded on stop. Overrides the configured pre-roll window. |
 | `--record-trigger-after=<s>` | — | Fire the incident trigger `<s>` seconds into the run. |
 | `--mark=<sec>[-<sec>]:<label>[@<lat>,<lon>]` | — | With `--record`: inject a manual **event** at `<sec>` into the run (a `<start>-<end>` range makes an interval); repeatable. An optional `@<lat>,<lon>` suffix attaches a geo point. |
 | `--replay=<session-dir>` | — | **Reinjection replay**: rebuild the pipeline from the session's embedded graph and *run* it, with the recorded source nodes replay-driven — their plugins never start; the engine feeds them decoded video plus recorded data at recorded pace, and everything downstream recomputes live. No project argument (an optional positional arg is the plugin dir). Interoperability extensions (SAPIENT/DDS) are disabled so a replayed incident can't re-publish to live peers. Combine with `--record` to capture the recomputed run. |
@@ -52,6 +55,32 @@ Record a run, then re-run the recording at 4× with one parameter changed and ca
 ./speculor_cli --replay=/data/sessions/20260715-101500 ./plugins \
     --replay-speed=4 --replay-set=3.confidence_threshold=0.4 --record
 ```
+
+## Configuration
+
+`speculor_cli` reads the **same settings store the GUI writes**, so a machine configured once behaves the same however it is launched. Configure it in the GUI's Preferences, then run the CLI on the same box and the pipeline uses those values — no flags, no environment variables.
+
+| Configured in | Applies headlessly |
+|---------------|--------------------|
+| Preferences → **Reliability** | Watchdog: hang timeouts, auto-restart, max restarts, restart cooldown, poll interval. |
+| Preferences → **Performance** | Frame pool size and budget, GPU pipeline depth, GPU submit diagnostics. |
+| Preferences → **GPU** | Preferred device (index / UUID), disabled Vulkan loader layers, validation layers. |
+| Preferences → **Recording** | Destination folder, capture mode, pre-roll, part / spool / min-free / budget sizes, raw codec. |
+| Preferences → **Time Sync** | Clock source, NTP server, manual offset, estimated-error floor. |
+| Preferences → **Extensions** | SAPIENT and DDS configuration. |
+
+Precedence is **command line > environment variable > preference > built-in default**. Every flag in the tables above overrides the corresponding preference for that run only; nothing is written back.
+
+Interface settings (UI scale, zoom-fit, panel refresh cadence) are GUI-only — they have no headless meaning.
+
+**Reproducible runs.** Pass `--no-preferences` to ignore the store completely and start from built-in defaults. Use it in CI, where inheriting whatever a developer last configured would make runs non-reproducible. Flags still apply, so a CI job can pin exactly the values it wants:
+
+```bash
+./speculor_cli my_pipeline.speculor ./plugins \
+    --no-preferences --pool-frames=32 --run-seconds=60
+```
+
+> The store is per-machine, not per-project. Values that belong to a pipeline — node parameters, stream ports, layouts — live in the `.speculor` file and travel with it.
 
 ## Streaming
 
@@ -85,7 +114,7 @@ By default stdout and stderr are quiet — only a single banner is printed to st
 
 | Variable | Purpose |
 |----------|---------|
-| `SPC_GPU_DEVICE_INDEX` | Pick the Nth Vulkan adapter (0-based) returned by `vkEnumeratePhysicalDevices`. Overrides the `discrete > integrated > first` heuristic. The GUI's per-profile device selection is a `QSettings` value and only applies when launched from the GUI; the CLI uses this env var instead. |
+| `SPC_GPU_DEVICE_INDEX` | Pick the Nth Vulkan adapter (0-based) returned by `vkEnumeratePhysicalDevices`. Overrides the `discrete > integrated > first` heuristic. The CLI already applies the device chosen in Preferences → GPU (see [Configuration](#configuration)); use this to override it for one run, or on a machine that was never configured through the GUI. |
 | `VK_LOADER_LAYERS_DISABLE` | Comma-separated list of Vulkan loader layers to disable before `vkCreateInstance`. Most often used to drop `VK_LAYER_AMD_switchable_graphics` on hybrid laptops — see [troubleshooting.md → Vulkan](troubleshooting.md#vulkan-gpu-plugins-fall-back-to-cpu). |
 | `SPC_VULKAN_VALIDATION` | Set to `1` to enable the `VK_LAYER_KHRONOS_validation` layer (requires the Vulkan SDK installed locally). Off by default. |
 
@@ -93,7 +122,7 @@ The GUI's `SPC_EXIT_TIMEOUT_MS` (forced-exit grace period) does **not** apply to
 
 ### Recording storage budgets
 
-The GUI reads these from Preferences → Recording; headless, they are environment variables. See [recording.md](recording.md).
+Both frontends read these from Preferences → Recording, and these environment variables override that value for a single run (env > preference > default). See [recording.md](recording.md).
 
 | Variable | Default | Purpose |
 |----------|---------|---------|

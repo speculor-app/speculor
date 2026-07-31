@@ -121,12 +121,15 @@ Below the required tier a page is visible but disabled.
 
 ## Environment overrides
 
-A handful of preferences also have environment-variable equivalents that the CLI runner uses (the CLI doesn't read the GUI's QSettings store):
+`speculor_cli` reads these same preferences from the same store, so a machine configured here behaves the same headless — see [cli.md → Configuration](cli.md#configuration). A handful also have environment-variable equivalents, which override the stored value for a single run:
 
-| Variable | Replaces |
+| Variable | Overrides |
 |----------|----------|
 | `SPC_GPU_DEVICE_INDEX` | `preferences/gpu/device_index` for the Default profile. |
 | `VK_LOADER_LAYERS_DISABLE` | `preferences/gpu/disable_amd_switchable` + `extra_disabled_layers` (joined). |
-| `SPC_VULKAN_VALIDATION` | `preferences/gpu/vulkan_validation` when the GUI hasn't called `set_validation_enabled` (CLI path). |
+| `SPC_VULKAN_VALIDATION` | `preferences/gpu/vulkan_validation` when neither frontend has called `set_validation_enabled`. |
+| `SPC_RECORD_*` | The corresponding Recording sizes — see [cli.md](cli.md#recording-storage-budgets). |
+
+Precedence throughout is **command line > environment variable > preference > built-in default**.
 
 See [cli.md](cli.md) for full CLI environment.
