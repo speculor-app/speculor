@@ -72,7 +72,7 @@ Maps 1:1 onto `spc::NodeWatchdog::Config`. Timeouts are stored in **milliseconds
 
 ## Recording
 
-The recording & replay feature set is **experimental** and requires a **Personal** licence or higher — below that the page is disabled. See [recording.md](recording.md) for what these do; [cli.md](cli.md#recording-storage-budgets) lists the headless equivalents.
+The recording & replay feature set is **experimental** and requires a **Personal** licence or higher — below that the page is disabled. See [recording.md](recording.md) for what these do. `speculor_cli` reads the same settings — there are no separate headless knobs.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -85,6 +85,10 @@ The recording & replay feature set is **experimental** and requires a **Personal
 | `recording/spool_mb` | int | `64` | Per-recorder RAM spool cap. Bounds recorder memory; overflow is recorded as a gap. |
 | `recording/min_free_mb` | int | — | Pause recording when free disk space falls below this. |
 | `recording/budget_mb` | int | `0` | Total on-disk budget for a session. `0` = unlimited; otherwise the oldest parts are ring-deleted. |
+| `recording/mcap_codec` | QString | `zstd` | Compression for `traffic.mcap`: `zstd`, `lz4`, or `none`. |
+| `recording/mcap_level` | QString | `default` | Compression level: `fastest`, `fast`, `default`, `slow`, `slowest`. |
+
+Compression is a **throughput** decision before it is a size one. The traffic writer is a single thread; a codec it cannot sustain falls behind and the recorder drops messages. Measured on an SDR-heavy graph with ~7.4 MB/s arriving: zstd held the writer at 6% busy for a 297 MB file, LZ4/fast at 5% for 328 MB, none at 2% for 540 MB — while LZ4's high-compression mode pinned one core at 99.9% and lost 43% of messages. Leave it on `zstd` unless you have measured a reason not to.
 
 ## Time Sync
 
@@ -128,7 +132,6 @@ Below the required tier a page is visible but disabled.
 | `SPC_GPU_DEVICE_INDEX` | `preferences/gpu/device_index` for the Default profile. |
 | `VK_LOADER_LAYERS_DISABLE` | `preferences/gpu/disable_amd_switchable` + `extra_disabled_layers` (joined). |
 | `SPC_VULKAN_VALIDATION` | `preferences/gpu/vulkan_validation` when neither frontend has called `set_validation_enabled`. |
-| `SPC_RECORD_*` | The corresponding Recording sizes — see [cli.md](cli.md#recording-storage-budgets). |
 
 Precedence throughout is **command line > environment variable > preference > built-in default**.
 

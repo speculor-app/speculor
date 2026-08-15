@@ -122,15 +122,18 @@ The GUI's `SPC_EXIT_TIMEOUT_MS` (forced-exit grace period) does **not** apply to
 
 ### Recording storage budgets
 
-Both frontends read these from Preferences → Recording, and these environment variables override that value for a single run (env > preference > default). See [recording.md](recording.md).
+Both frontends read these from **Preferences → Recording** — configure them once in the GUI and `speculor_cli` on the same machine uses the same values. See [recording.md](recording.md).
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `SPC_RECORD_PART_MB` | `1024` | Video part size — recordings segment (keyframe-aligned) at this size. |
-| `SPC_RECORD_MCAP_PART_MB` | `512` | Structured-traffic part size. |
-| `SPC_RECORD_SPOOL_MB` | `64` | Recorder memory spool. Overflow is recorded as a gap rather than stalling the pipeline. |
-| `SPC_RECORD_MIN_FREE_MB` | — | Stop recording when free disk falls below this. |
-| `SPC_RECORD_BUDGET_MB` | — | Total on-disk budget for a session. |
+| Setting | Default | Purpose |
+|---------|---------|---------|
+| Video part size | `1024` MB | Recordings segment (keyframe-aligned) at this size. |
+| Data part size | `512` MB | Structured-traffic part size. |
+| Memory spool | `64` MB | Recorder memory. Overflow is recorded as a gap rather than stalling the pipeline. |
+| Minimum free disk | `2048` MB | Stop recording when free disk falls below this. |
+| Session budget | unlimited | Total on-disk budget for a session. |
+| Data compression | `zstd` | Codec for `traffic.mcap`. A throughput choice before a size one — see [recording.md](recording.md#when-the-recorder-cannot-keep-up). |
+
+These were previously settable through `SPC_RECORD_*` environment variables. They no longer are: a recording knob reachable only through the environment is invisible to the person doing the recording, and these had no UI trace at all.
 
 ## Interoperability
 
