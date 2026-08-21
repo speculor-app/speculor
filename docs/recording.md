@@ -78,6 +78,28 @@ You can drop a **manual event** from the Events panel (live) or the Session Repl
 
 Open (or double-click) enters Replay Mode with the right backend for the recording's mode. Cards read only the small sidecar files (`session.json`, `graph.speculor`, `events.json`, `poster.jpg`, `event_thumbs.json`), so the list builds without touching the mcap. The header's **Open Other…** button opens a session that lives outside the configured folder, and **Open Folder** reveals the root in your file manager.
 
+## Device recordings (Sensor Analyzer)
+
+A **device recording** is made by something with no pipeline — a phone running Speculor
+Mobile Sensor, or an edge box. It is a camera plus a bundle of time series that share one
+clock, and that is a different shape from a pipeline session: opened in the node graph it
+is a row of disconnected boxes that cannot run.
+
+The **Sensor Analyzer** reads it as an instrument instead. Video and every recorded stream
+hang off a **single playhead**, so a change in one is read against the others at the
+instant it happened. It shows where the device was pointing and the ground track it
+followed, draws the camera's field of view from the figure the device itself recorded
+(falling back to lens and sensor geometry, and drawing no cone at all when neither is
+known), and overlays what the instruments held at the playhead onto the frame.
+
+It is read-only and engine-free — it owns its own session reader, opens with the pipeline
+stopped, and cannot disturb a run — and it is **not tier-gated**, because a phone records
+on Community and the analyzer is what makes that recording worth looking at.
+
+Reach it from **Tools → Sensor Analyzer…**, or from the **Analyze** button that appears on
+a device recording's card in the Recordings view. Device sessions arrive either by the
+phone pushing them to a paired Speculor over the LAN, or as a shared `.spcsession` bundle.
+
 ## Scrubbing a session (Session Replay)
 
 Opening a **Full** recording from the Recordings view scrubs it faithfully in the main window under the DVR transport: decoded video with play/pause and 0.25–4× speed, plus the latest recorded values of every structured channel at the cursor.
