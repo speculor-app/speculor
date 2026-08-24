@@ -100,13 +100,15 @@ Headless rendering uses Qt's **offscreen QPA platform** — no display server, n
 
 ## Logs
 
-The CLI writes a rolling log file at `<exe_dir>/logs/speculor_cli.log` in the format:
+The CLI writes to `<exe_dir>/logs/speculor_cli.log`, in the format:
 
 ```
-[HH:MM:SS.mmm] [LEVEL] [source] message
+YYYY-MM-DD HH:MM:SS.mmm [LEVEL] source: message
 ```
 
-`LEVEL` is one of `DEBUG`, `INFO`, `WARN`, `ERROR`. Plugin output (via `SPC_LOG_*` macros) flows through the same sink.
+`LEVEL` is one of `DEBUG`, `INFO`, `WARN`, `ERROR`. Plugin output (via `SPC_LOG_*` macros) flows through the same sink. The startup banner printed to stderr names the exact file.
+
+`speculor_cli.log` is always the current run. When a run starts and finds a log left from an earlier day, that file is renamed to a dated archive (`speculor_cli-2026-08-23.log`) and archives older than 7 days are deleted; the live file is also archived once it passes 256 MB. Repeated messages are rate-limited. See [troubleshooting.md → Where do logs go?](troubleshooting.md#where-do-logs-go) for the full policy.
 
 By default stdout and stderr are quiet — only a single banner is printed to stderr at startup so interactive users know the process is alive. Pass `--log-stderr` to mirror every log entry to stderr (useful when running under a process supervisor that captures stderr, or for live debugging). Stdout is never written to, so `speculor_cli ... > some.pipe` stays clean for piping into other tools.
 
