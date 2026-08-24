@@ -2,7 +2,7 @@
 
 Application-wide preferences live in `QSettings` under `preferences/*`. Open the dialog with **Edit → Preferences…** (`Ctrl+,`).
 
-The dialog has seven pages, selected from the sidebar: **GPU**, **Interface**, **Reliability**, **Performance**, **Recording**, **Time Sync**, and **Extensions**. GPU and Interface require an app restart (the GPU context isn't hot-swappable; `QT_SCALE_FACTOR` is read only at `QApplication` construction). Reliability, Performance, and Recording apply at the next pipeline start; Time Sync applies immediately.
+The dialog has eight pages, selected from the sidebar: **GPU**, **Interface**, **Logging**, **Reliability**, **Performance**, **Recording**, **Time Sync**, and **Extensions**. GPU and Interface require an app restart (the GPU context isn't hot-swappable; `QT_SCALE_FACTOR` is read only at `QApplication` construction). Reliability, Performance, and Recording apply at the next pipeline start; Logging and Time Sync apply immediately.
 
 The **Extensions** page is registry-driven: each interoperability extension self-registers its own settings page — tier-gated (DDS Personal, SAPIENT Team) — and its keys live under `extensions/<id>/*`, **not** `preferences/*`. See [dds.md](dds.md#configuration) and [sapient.md](sapient.md#configuration) for the per-extension keys.
 
@@ -45,6 +45,23 @@ Stored as a `QSettings::beginWriteArray("preferences/gpu/profiles")`:
 | `preferences/ui/scale_factor` | double | `1.0` | UI scale. Discrete presets: `0.75`, `1.0`, `1.25`, `1.50`, `1.75`, `2.0`. Multiplies Qt's per-monitor DPI scaling. **Restart required** — applied via `qputenv("QT_SCALE_FACTOR", …)` before `QApplication` construction. |
 | `preferences/ui/zoom_fit_on_open` | bool | `true` | If true, every project open zooms / pans the Pipeline view so all nodes fit (same as the ⛶ button). Applies immediately, no restart. |
 | `preferences/ui/node_stats_interval_ms` | int | `1000` | Refresh period for the per-node stats badge (FPS / latency / drops / health) under each pipeline node. Combo presets: Off / 500 ms / 1 s / 2 s / 5 s (`0` = badges hidden, timer stopped). The engine's own measurement window is unaffected — only the UI poll cadence. Applies immediately, no restart. |
+
+## Logging
+
+Controls how the log files in `logs/` are rotated and pruned. See
+[troubleshooting.md → Where do logs go?](troubleshooting.md#where-do-logs-go) for
+the file layout these keys govern.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `preferences/logging/retain_days` | int | `7` | How long dated archives (`speculor-2026-08-23.log`) are kept. Older ones are deleted when a run starts, and again whenever this setting changes. `0` keeps every archive — on a box that runs continuously, that eventually fills the disk. The live `speculor.log` is never deleted. |
+| `preferences/logging/max_file_mb` | int (MiB) | `256` | Size at which the live log is archived under today's date and a fresh one opened. The daily rotation only fires when a run *starts*, so this is what bounds a headless process that runs for weeks without restarting. `0` = no cap. |
+| `preferences/logging/suppress_repeats` | bool | `true` | After 5 identical messages from the same source within 10 seconds, further copies are held back and reported as one line naming how many were suppressed. Applies to the **Log** panel as well as the file. Turn off when you need every occurrence of a repeating message while debugging. |
+
+All three apply immediately: retention is re-run against the open log and a lowered
+size cap takes effect on the next line written. `speculor_cli` reads the same keys
+from the same store, so a box configured through the GUI logs the same way when run
+headless; `--no-preferences` falls back to the built-in policy.
 
 ## Reliability — node watchdog
 
@@ -120,6 +137,7 @@ Below the required tier a page is visible but disabled.
 
 - **GPU / Interface** → app restart required. The dialog offers **Restart Now** / **Later** / **Cancel** when one of these is changed.
 - **Reliability / Performance** → applied at the next pipeline start. If the pipeline is currently running, Stop and Start to pick up new values.
+- **Logging** → applied immediately. Retention re-runs against the open log; a lowered size cap takes effect on the next line written.
 - **Time Sync** → applied immediately, and re-applied at startup so the persisted source is active from launch.
 - Engine-section changes are **committed independently** of the restart prompt — cancelling the restart prompt does not discard them.
 
