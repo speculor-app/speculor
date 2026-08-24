@@ -52,12 +52,23 @@ The release binaries assume a portable x86-64 baseline, but a CPU older than tha
 
 ### Where do logs go?
 
-Both `speculor_app` and `speculor_cli` write a rolling log file under a `logs/` directory next to the executable:
+Both `speculor_app` and `speculor_cli` write to a `logs/` directory next to the executable:
 
-- `logs/speculor.log` — GUI log.
-- `logs/speculor_cli.log` — CLI log.
+- `logs/speculor.log` — the current GUI log.
+- `logs/speculor_cli.log` — the current CLI log.
 
-The GUI also surfaces live entries in the **Log** dock (View → Pipeline → Log). The CLI is quiet on stdout/stderr by default; pass `--log-stderr` to mirror entries to stderr — see [cli.md](cli.md#logs).
+These two names always point at the live file, so anything that references them keeps working. Older logs sit beside them as dated archives, `speculor-2026-08-23.log`, named for the day that run was started.
+
+Rotation happens **only when a run starts**. If the live file was opened on an earlier day, it is renamed to its date and a fresh one is opened; if it was opened today, the new run appends to it, marked by a `=== Log session started ... ===` banner. A run that crosses midnight therefore keeps writing to the file it opened, and no archive ever splits a live session.
+
+Two limits keep the directory bounded:
+
+- **Retention** — archives older than **7 days** are deleted when a run starts. `speculor.log` itself is never a deletion candidate, and nothing is deleted while a run is in progress.
+- **Size** — when the live file passes **256 MB**, it is archived as `speculor-YYYY-MM-DD.log` (or `.1.log`, `.2.log` if that name is taken) and a fresh `speculor.log` is opened, carrying a `=== continued from ... ===` line. This is what stops a long-running headless process, which may never restart to trigger the daily rotation, from filling the disk.
+
+Repeated messages are rate-limited: after 5 identical entries from the same source within 10 seconds, further copies are suppressed and reported once the window closes as `suppressed N identical messages in 10 s: <message>`. A flapping node would otherwise crowd out everything else.
+
+**Help → Open Log Folder** opens the directory. The GUI also surfaces live entries in the **Log** dock (View → Pipeline → Log). The CLI is quiet on stdout/stderr by default; pass `--log-stderr` to mirror entries to stderr — see [cli.md](cli.md#logs).
 
 ### Pipeline appears hung
 
@@ -81,7 +92,7 @@ Release builds ship without debug info, so frames show raw addresses. Capture th
 
 `speculor_app` arms an exit watchdog when the Qt event loop returns: if cleanup doesn't finish within 3 s, the process force-exits. The grace period can be overridden with `SPC_EXIT_TIMEOUT_MS` (clamped to `[0, 30000]`).
 
-If the watchdog fires, `speculor.log` records `exit watchdog fired — process did not terminate cleanly`.
+If the watchdog fires, the log records `exit watchdog fired — process did not terminate cleanly`.
 
 ### Recording controls are greyed out
 
