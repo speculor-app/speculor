@@ -21,7 +21,7 @@ speculor_cli <project.speculor> [plugin_dir] [options]
 | `--no-preferences` | off | Ignore the shared settings store entirely and run on built-in defaults — for reproducible CI runs that must not inherit local configuration. Command-line flags still apply. See [Configuration](#configuration). |
 | `--run-seconds=<N>` | off | Auto-stop cleanly after `N` seconds. |
 | `--license-file=<path>` | (cached file) | Use a licence file from an explicit path instead of the cached one. See [licensing.md](licensing.md#cli-usage). |
-| `--activate=<key>` | — | Activate this machine against a licence key, write the signed licence file, and exit. Optionally with `--machine-name=<name>`. |
+| `--sign-in` | — | Sign this machine in to your Speculor account (an address and a short code to approve in any browser), activate it with the account's licence, write the signed licence file, and exit. Optionally with `--machine-name=<name>`. See [licensing.md](licensing.md#cli-usage). |
 
 ### Recording & replay
 
