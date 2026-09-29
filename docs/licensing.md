@@ -1,6 +1,6 @@
 # Licensing
 
-Speculor is sold under a per-user offline-capable licence. The app and CLI will not start without a valid signed licence file.
+Speculor is sold under a per-user offline-capable licence, and **the licence comes with your Speculor account**: a machine gets it by signing in. The app and CLI will not start without a valid signed licence file.
 
 ## Licence tiers
 
@@ -23,16 +23,20 @@ Feature gates above the base tiers:
 
 **Plugin loading** is gated the same way. Each plugin declares the minimum tier it needs. At startup the app and `speculor_cli` load only plugins at or below the active tier — a higher-tier plugin is skipped during the plugin scan and never appears in the browser. See [plugins.md](plugins.md).
 
-The tier is shown on the **Help → License…** page. Obtain or upgrade a licence via the **Get a license** button (first-run dialog) or **Switch License…** (License page) — both open the customer portal.
+The account and its tier are shown on the **Help → Account…** page. Upgrade through **Manage account** there, which opens the customer portal; the machine follows the account's licence at its next launch.
 
-## How activation works
+## How signing in works
 
-1. After purchasing a licence, you receive a licence key by email (e.g. `XXXX-XXXX-XXXX-XXXX-XXXX`).
-2. First launch shows an activation dialog. Enter the key and a friendly machine name (defaults to the hostname). Click **Activate**.
-3. The app contacts the licensing server once to bind the key to this machine's fingerprint, downloads a signed licence file, and stores it under the OS user's application-data directory.
-4. After activation the app works fully offline up to the file's expiry plus a grace period (default 14 days). When the app is online the licence file is silently refreshed in the background ~2 s after the main window appears.
+1. First launch shows **Sign in to Speculor**. Click **Sign in** (or **Create an account** — every account comes with a free Community licence). The sign-in opens in your browser, so Speculor never sees your password.
+2. Once you have signed in, the app picks the account's best active licence, binds it to this machine's fingerprint, downloads a signed licence file, and stores it under the OS user's application-data directory. The machine name defaults to the hostname.
+3. After that the app works fully offline up to the file's expiry plus a grace period (default 14 days). When the app is online it renews the sign-in and refreshes the licence file in the background ~2 s after the main window appears; if the account now carries a different licence (an upgrade, a purchase), the machine moves to it.
+4. **Help → Account… → Sign out** signs the machine out and gives its licence slot back, so another machine can use it.
 
-A single licence supports activation on up to **2 machines by default** (e.g. desktop + laptop). Additional machines return a `MACHINE_LIMIT_EXCEEDED` error; deactivate one machine through the account dashboard before activating a third.
+The app keeps only a sign-in token, never your password: in DPAPI on Windows, in the desktop keyring (GNOME Keyring, KWallet, KeePassXC) on Linux, and otherwise in a file only your OS user can read.
+
+A single licence supports activation on up to **2 machines by default** (e.g. desktop + laptop). Additional machines return a `MACHINE_LIMIT_EXCEEDED` error; sign out on one machine, or remove it through the account dashboard, before signing in on a third.
+
+A machine activated with a typed key before accounts arrived keeps running on it, and asks you to sign in at each launch until you do.
 
 ## Licence file location
 
@@ -48,17 +52,17 @@ The file is an armored Ed25519-signed blob. The app verifies the signature on ev
 
 `speculor_cli` requires a tier **above Community** (Personal, Indie, or Team). A Community licence (or none) makes the runner exit with code `2` and an "upgrade at &lt;portal&gt;" message. It reads the cached licence file from the same application-data path the GUI uses. Three setup paths for a headless box:
 
-1. **Activate from the CLI directly** (recommended):
+1. **Sign in from the CLI directly** (recommended):
 
    ```bash
-   ./speculor_cli --activate=XXXX-XXXX-XXXX-XXXX-XXXX
+   ./speculor_cli --sign-in
    # optional: --machine-name="render-rack-01"
    # optional: --license-file=/srv/speculor/license.lic
    ```
 
-   Contacts the licensing server, binds this machine to the key, writes the signed file, and exits.
+   Prints an address and a short code. Open the address in a browser on any device, sign in and enter the code; the CLI then activates this machine with the account's licence, writes the signed file, and exits. Only approve a code you started yourself.
 
-2. Activate Speculor once on a desktop machine signed in as the same OS user, then hand-copy `license.lic` to the headless machine's application-data path above.
+2. Sign in to Speculor once on a desktop machine as the same OS user, then hand-copy `license.lic` to the headless machine's application-data path above.
 
 3. Pass `--license-file=<path>` to point the gate at a licence file shipped out-of-band:
 
@@ -84,6 +88,6 @@ See [cli.md](cli.md) for the rest of the CLI reference.
 
 The deliberate trade-off for offline tolerance: a licence file stays usable on its fingerprinted machine until it expires plus the grace period, even if it is revoked server-side in the meantime.
 
-## Keep your key private
+## Keep your licence file private
 
-The registered email is shown in the About dialog and embedded in the signed payload, so publishing a licence key publicly is also publishing the email it was sold to. Activation is capped per licence, and a leaked key can be revoked server-side.
+The account's email is embedded in the signed payload, so publishing a licence file publicly is also publishing that address. Activation is capped per licence, and a leaked licence can be revoked server-side.

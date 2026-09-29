@@ -10,7 +10,7 @@ The app discovers plugins in the `plugins/` directory next to the app binary. An
 
 Extract the `speculor-bundle-*.zip` / `.tar.xz` files from the same release at the install root — they drop plugins under `plugins/<bundle-name>/` and any vendor libraries beside them, and the app picks both up automatically on the next launch. See [plugins.md](plugins.md) for which bundle carries which plugin.
 
-If only *some* plugins are missing, check the tier on **Help → License…**: plugins declare a minimum licence tier and any plugin above the active tier is skipped during the scan and never appears in the browser. See [licensing.md](licensing.md).
+If only *some* plugins are missing, check the tier on **Help → Account…**: plugins declare a minimum licence tier and any plugin above the active tier is skipped during the scan and never appears in the browser. See [licensing.md](licensing.md).
 
 ### A plugin disappeared after upgrading the app
 
@@ -96,7 +96,7 @@ If the watchdog fires, the log records `exit watchdog fired — process did not 
 
 ### Recording controls are greyed out
 
-Recording & replay are **experimental** and require a **Personal** licence or higher in their entirety — the transport Record button, the Recordings view, Tools → Session Replay, the Preferences → Recording page, and the CLI's `--record` / `--replay` / `--replay-dump` / `--export` modes. Check the tier on **Help → License…**. See [recording.md](recording.md) and [licensing.md](licensing.md).
+Recording & replay are **experimental** and require a **Personal** licence or higher in their entirety — the transport Record button, the Recordings view, Tools → Session Replay, the Preferences → Recording page, and the CLI's `--record` / `--replay` / `--replay-dump` / `--export` modes. Check the tier on **Help → Account…**. See [recording.md](recording.md) and [licensing.md](licensing.md).
 
 ### DDS: instances don't discover each other
 

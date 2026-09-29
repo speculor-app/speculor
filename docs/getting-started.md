@@ -85,5 +85,5 @@ While the pipeline is running, mutating actions (cut/paste/duplicate/delete and 
 - [project-format.md](project-format.md) — `.speculor` JSON schema.
 - [dds.md](dds.md) — connecting multiple Speculor instances over Fast DDS (Personal tier).
 - [sapient.md](sapient.md) — SAPIENT sensor interoperability (Team tier).
-- [licensing.md](licensing.md) — licence tiers, activation, and offline behaviour.
+- [licensing.md](licensing.md) — licence tiers, signing in, and offline behaviour.
 - [troubleshooting.md](troubleshooting.md) — when something doesn't work.
