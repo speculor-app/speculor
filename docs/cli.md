@@ -21,6 +21,9 @@ speculor_cli <project.speculor> [plugin_dir] [options]
 | `--no-preferences` | off | Ignore the shared settings store entirely and run on built-in defaults — for reproducible CI runs that must not inherit local configuration. Command-line flags still apply. See [Configuration](#configuration). |
 | `--run-seconds=<N>` | off | Auto-stop cleanly after `N` seconds. |
 | `--license-file=<path>` | (cached file) | Use a licence file from an explicit path instead of the cached one. See [licensing.md](licensing.md#cli-usage). |
+| `--offline-request` | — | For a machine with no internet: write its request (to `--out=<file>`), to exchange in the portal for a licence file. See [licensing.md](licensing.md#a-machine-with-no-internet). |
+| `--license-import=<file>` | — | Check a licence file brought by hand on this machine and install it. |
+| `--offline-release` | — | Delete this machine's offline licence file and write the receipt (to `--out=<file>`) the portal takes to free its seat early. |
 | `--sign-in` | — | Sign this machine in to your Speculor account (an address and a short code to approve in any browser), activate it with the account's licence, write the signed licence file, and exit. Optionally with `--machine-name=<name>`. See [licensing.md](licensing.md#cli-usage). |
 
 ### Recording & replay

@@ -38,6 +38,35 @@ A single licence supports activation on up to **2 machines by default** (e.g. de
 
 A machine activated with a typed key before accounts arrived keeps running on it, and asks you to sign in at each launch until you do.
 
+## A machine with no internet
+
+Personal licences and above can license a machine that never reaches the internet — an
+edge box, a closed site — by hand, from any device that has internet:
+
+1. On the machine: **Sign in to Speculor → This machine has no internet… → Save the
+   request** (or `speculor_cli --offline-request`). The request names the machine — its
+   fingerprint, a name, the app version — and carries nothing secret.
+2. On a device with internet: sign in to the portal, open **Account → Licenses**, and give
+   the request to the licence under **Machines with no internet**. You get a licence file
+   back.
+3. On the machine: **Import licence file…** (or `speculor_cli --license-import=<file>`).
+   The file is checked on the machine before it is installed.
+
+The file lasts until the licence ends — for a subscription, until the end of the period
+already paid for — and is never refreshed, so the app says when it is within 30 days of
+its end; **Help → Account… → New licence file…** repeats the exchange for the same machine
+and seat. Because the machine never checks in, its clock matters: a clock more than a day
+behind the last time Speculor ran on it is refused, since set back it would revive an
+expired file.
+
+**Its seat stays taken until the file expires.** A file on a machine that never reaches
+the internet cannot be recalled, so the portal cannot simply free the seat. There, the
+machine can be set to **retire at expiry**, giving its seat back when its file ends; or
+released early, once per licence per year — with the receipt the machine writes when you
+choose **Help → Account… → Release this machine…** (`speculor_cli --offline-release`),
+which deletes its licence file, or without one for a machine that no longer works.
+Beyond that, contact support.
+
 ## Licence file location
 
 | OS      | Path                                                            |
