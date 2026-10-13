@@ -26,7 +26,7 @@ Each exposed stream gets **its own topic** (`spc/stream/<origin_id>/<node_id>/<o
 
 ## Exposing node outputs
 
-Right-click a node in the graph editor → **Expose via DDS** → tick output ports (or use the **DDS** group in Node Properties, which shows the same per-port checkboxes). Only publishable output classes are offered (frame/table/scalar/record/packet — not the direct-call signal/control ports). A blue **DDS** badge appears on exposed nodes.
+Right-click a node in the graph editor → **Expose via DDS** → tick output ports (or use the **DDS** group in Node Properties, which shows the same per-port checkboxes). Only publishable output classes are offered (frame/table/scalar/record/packet/signal — not control ports). A signal port (audio, SDR I/Q) is published as a table sample whose header carries the sample rate, centre frequency, bandwidth, gain, AGC and bit depth; the instance's directory card names the stream `"kind": "signal"`. A blue **DDS** badge appears on exposed nodes.
 
 Exposure persists in the `.speculor` project (`interop.dds.exposed_ports`, keyed by node ID — duplicating a node never silently duplicates egress; see [project-format.md](project-format.md)). Toggling **Expose via DDS** takes effect live — the DDS pump re-seeds without restarting the pipeline — and the CLI needs no extra flags. An exposed-but-unwired port still runs its node (the tap counts as a consumer). Table streams advertise their runtime schema on the directory once the first sample flows.
 
@@ -63,7 +63,7 @@ Two things to note: **the delta filter is essential** — plain LZ4/Zstd get onl
 
 ## Subscribing to remote streams
 
-Drop a **DDS Subscribe** source (Sources/Interop) matching the stream class — `dds_subscribe_data` (table), `_scalar`, `_record`, `_video` (raw frames), `_packet` (bitstream, wire a decoder after it) — and set its parameters:
+Drop a **DDS Subscribe** source (Sources/Interop) matching the stream class — `dds_subscribe_data` (table), `_signal` (audio or SDR I/Q, delivered as a signal with its sample rate — wire it to `audio_spectrum`, `sdr_spectrum`, `iq_recorder` and the like), `_scalar`, `_record`, `_video` (raw frames), `_packet` (bitstream, wire a decoder after it) — and set its parameters:
 
 - `remote_instance` — the publisher's origin id (e.g. `spc-1a2b3c4d`)
 - `remote_node` / `remote_port` — the exposed node id + output-port ordinal
