@@ -58,6 +58,8 @@ SAPIENT config is **machine-level** — a property of this deployed box (role, e
         "alt": 35.0,                  //   an HLDMM can triangulate bearing-only tracks
 
         // --- HLDMM role ---
+        "listen_address": "0.0.0.0",  // IPv4 to listen on: every interface (default);
+                                      //   "127.0.0.1" keeps it to this machine
         "listen_port": 7000,          // port to accept ASM connections on
         "parent_host": "",            // optional: uplink fused output to a parent HLDMM
         "parent_port": 0,
@@ -90,6 +92,10 @@ The HLDMM fuses detections from multiple ASMs:
   - **geodetic** fixes → confidence-weighted mean.
   - a lone bearing → spherical passthrough until a second ray arrives.
 
+**Registration.** The HLDMM accepts every Registration and answers it with a RegistrationACK from its own node id. Detections are never held back waiting for one. A fusion node with a parent registers upstream under that same id.
+
+A Speculor ASM never waits for the ack, because Speculor fusion nodes older than this send none. If a fusion node rejects its registration, the ASM logs the reasons and keeps sending.
+
 ## Federation / chaining
 
 Set `parent_host`/`parent_port` on an `hldmm` node and it presents as an ASM to a parent HLDMM, forwarding its fused output upward:
@@ -117,6 +123,8 @@ Unmapped commands (e.g. free-form `mode_change`) get a well-formed `TaskACK(reje
 ## Mutual-TLS
 
 Set `tls: true` plus `tls_ca`/`tls_cert`/`tls_key` to wrap every SAPIENT connection in **mutual TLS** (each side presents *and* verifies a certificate against the CA, TLS 1.2+). Plain TCP is the default.
+
+**An HLDMM is reachable from the network by default.** It listens on every interface (`listen_address: "0.0.0.0"`). Over plain TCP, any host that reaches its port can register and send detections, and the HLDMM logs a warning saying so. Turn on mutual TLS so that only nodes holding a certificate get in. To keep the HLDMM to this machine instead, set `listen_address` to `127.0.0.1`.
 
 By default a peer is trusted if its certificate chains to the CA — so in a mesh where every node holds a cert from the same private CA, any node can present a valid cert for a connection to another. Set `tls_verify_hostname: true` (or tick **Verify peer hostname** in Preferences → Extensions) to additionally require the server certificate's identity (SAN/CN) to match the configured `host`, closing that gap. It is off by default because it requires your node certificates to carry a hostname that matches how peers address them.
 
@@ -146,7 +154,8 @@ The official **`dstl/BSI-Flex-335-v2-Test-Harness`** (Apache-2.0) is the counter
 ## Resilience notes
 
 - ASM reconnects with exponential backoff (`reconnect_backoff_max_ms`); detections queue (bounded, oldest-dropped) while disconnected.
-- HLDMM accepts per-client threads with a two-phase stop (shutdown-to-unblock, then join); the TLS handshake runs per client so a slow client can't stall `accept`.
+- HLDMM accepts per-client threads with a two-phase stop (shutdown-to-unblock, then join); the TLS handshake runs per client, bounded at 15 s, so a slow client can't stall `accept`.
+- HLDMM serves at most 128 clients at once; it closes further connections on arrival and counts them as `clients_refused` in the SAPIENT Console's status. On Windows its port is bound for exclusive use, so another process can't bind it too and take its connections.
 - Bus delivery is decoupled from the engine hot path (bounded ring + delivery thread), so a slow/blocked network peer never stalls processing.
 - The HLDMM drops an ASM that has sent nothing for 60 s (heartbeat timeout); the ASM reconnects.
 - Message archive/replay is a future hardening item.
@@ -155,7 +164,7 @@ The official **`dstl/BSI-Flex-335-v2-Test-Harness`** (Apache-2.0) is the counter
 
 If a SAPIENT link won't establish or drops repeatedly, open the **SAPIENT Console** (Tools → Extensions) and the **Log** dock for the connection state, then check:
 
-- **Reachability** — the fusion-node host/port (ASM) or `listen_port` (HLDMM) is open through any firewall; the console has a built-in probe.
+- **Reachability** — the fusion-node host/port (ASM) or `listen_address:listen_port` (HLDMM) is open through any firewall; the console has a built-in probe. An HLDMM with `listen_address: "127.0.0.1"` takes connections from its own machine only.
 - **TLS** — if mutual-TLS is enabled, every node must trust the same CA and present its own cert/key; a CA or path mismatch surfaces as a handshake failure.
 - **No detections leaving** — the pipeline only transmits world tracks, so it needs a `geolocation` stage after the tracker (a bare tracker has no geographic fix to send).
 - **Tier** — the extension is Team-gated; on a lower tier it stays idle even when configured.
