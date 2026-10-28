@@ -1,6 +1,6 @@
 # Speculor
 
-**A real-time sensor and signal-processing engine.** Speculor connects any device that produces data — cameras, microphones, SDR radios, GPS receivers, ADS-B feeds, weather stations, smart-home devices, databases — and routes it through low-latency processing pipelines assembled from dynamically loaded plugin nodes. The engine runs each node on its own thread, moves typed packets between them with lock-free transports, and keeps GPU work GPU-resident across multi-stage Vulkan pipelines.
+**A real-time sensor and signal-processing engine.** Speculor connects any device that produces data — cameras, microphones, SDR radios, GPS receivers, ADS-B feeds, weather stations, smart-home devices, databases — and routes it through low-latency processing pipelines assembled from dynamically loaded plugin nodes. The engine runs each node on its own thread, moves typed packets between them over bounded single-producer queues or direct calls, and keeps GPU work GPU-resident across multi-stage Vulkan pipelines.
 
 The engine is headless. Frontends ride on top of it: **`speculor_app`** — the Qt6 pipeline builder you'll see in the screenshots — is one of them; **`speculor_cli`** — the headless runner for servers and CI — is another; more are on the roadmap.
 
@@ -14,7 +14,7 @@ Speculor is a modular data-processing engine. Every block in a pipeline is a **p
 - **Video frames** travel through reference-counted shared pools — no allocations on the hot path, zero-copy when the consumer doesn't mutate.
 - **Tables** (detections, tracks, I/Q batches, sensor records) carry a typed schema so the engine validates port compatibility before the pipeline starts and routes whole batches without per-element overhead.
 - **Signals** (audio, SDR samples, high-rate sensor streams) bypass queues entirely — the engine direct-calls the consumer's `on_signal()` on the producer's thread for sample-accurate, zero-copy transport, with a lock-free SPSC ring buffer available when async hand-off is needed.
-- **GPU frames** stay GPU-resident across chains of GPU-capable plugins. The engine fuses every GPU node on the same Vulkan profile into a single `vkQueueSubmit2` per frame and injects inter-plugin barriers from the graph edges — N driver round-trips collapse to 1.
+- **GPU frames** stay GPU-resident across chains of GPU-capable plugins. The engine fuses every GPU node on the same Vulkan profile into a single `vkQueueSubmit2` per frame and inserts the barriers between plugins itself — N driver round-trips collapse to 1.
 - **Control & parameter feedback** flows back through a dedicated connection class, so a downstream node can drive an upstream node's parameters live (e.g. a tracker steering a PTZ camera, or a classifier retuning a radio).
 
 The same `.speculor` project runs under any frontend — graph, parameters, dashboard layouts, and MJPEG streams all carry over. Build and tune interactively in `speculor_app`; deploy on a server with `speculor_cli`.
@@ -22,7 +22,7 @@ The same `.speculor` project runs under any frontend — graph, parameters, dash
 ## Why this design
 
 - **Heterogeneous sensors, one graph.** An ADS-B feed at 1 Hz, a camera at 30 Hz, and an SDR at 2 MHz can converge on the same fusion node. Each connection picks the transport that fits its data, so rates don't fight each other.
-- **Predictable latency.** Per-node threads, lock-free SPSC queues, and pre-allocated frame / table pools mean a frame doesn't wait on a contended lock or a heap allocation. The graph *is* the schedule.
+- **Predictable latency.** Per-node threads, SPSC queues, and pre-allocated frame / table pools mean a frame doesn't wait on a heap allocation, and a queue's lock is only ever shared by its one producer and one consumer. The graph *is* the schedule.
 - **GPU when it pays off.** Vulkan compute is opt-in per plugin. When multiple GPU nodes share a profile, the engine coalesces their submits so the win compounds across the chain instead of being eaten by per-plugin driver overhead. Mid-run `DEVICE_LOST` recovers automatically.
 - **Hot-pluggable extensibility.** Drop a new `.dll` / `.so` into the plugin folder and it appears in the Modules panel — no host recompile, no rebuild, no restart of unrelated nodes.
 - **Crash-resistant.** Every `process()` and `record_gpu` runs under an SEH (Windows) / signal-handler (POSIX) guard. A misbehaving plugin gets stack-traced, restarted, and after N retries cascade-disables itself — the rest of the pipeline keeps running.

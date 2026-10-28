@@ -144,10 +144,10 @@ These were previously settable through `SPC_RECORD_*` environment variables. The
 
 The DDS and SAPIENT extensions run headless too, reading the same machine-level configuration the GUI writes:
 
-| Option / variable | Purpose |
-|-------------------|---------|
+| Option | Purpose |
+|--------|---------|
 | `--dds-config=<ini>` | Override the DDS extension's configuration with an ini file. See [dds.md](dds.md#configuration). |
-| `SPC_SAPIENT_ROLE`, `SPC_SAPIENT_HOST`, `SPC_SAPIENT_PORT`, `SPC_SAPIENT_PARENT_HOST`, `SPC_SAPIENT_PARENT_PORT` | SAPIENT role and endpoints. See [sapient.md](sapient.md#configuration). |
+| `--sapient-config=<ini>` | Override the SAPIENT extension's configuration with an ini file. See [sapient.md](sapient.md#configuration). The `SPC_SAPIENT_*` environment variables were removed in 0.23.0. |
 
 Both are disabled automatically during `--replay`, so a replayed incident never re-publishes to live peers.
 

@@ -37,7 +37,7 @@ A "central" Speculor is simply `speculor_cli` (or the app) running a project who
 
 ## Configuration
 
-SAPIENT config is **machine-level** — a property of this deployed box (role, endpoints, identity, position, TLS material), not the pipeline. In the GUI, edit it in **Preferences → Extensions** (`Ctrl+,`, Team-tier gated); it persists to the app's settings and applies at the next pipeline Start. Headless (`speculor_cli`) reads the `SPC_SAPIENT_*` environment variables instead. The field names below are what the extension consumes (and the env-var suffixes / settings fields map onto them one-to-one).
+SAPIENT config is **machine-level** — a property of this deployed box (role, endpoints, identity, position, TLS material), not the pipeline. In the GUI, edit it in **Preferences → Extensions** (`Ctrl+,`, Team-tier gated); it persists to the app's settings and applies at the next pipeline Start. Headless (`speculor_cli`) reads the same settings, or an ini file you name with `--sapient-config=<ini>`; no environment variable configures it. The field names below are what the extension consumes (the settings fields map onto them one-to-one).
 
 ```jsonc
 {
@@ -78,7 +78,7 @@ SAPIENT config is **machine-level** — a property of this deployed box (role, e
 }
 ```
 
-Environment fallbacks: `SPC_SAPIENT_ROLE`, `SPC_SAPIENT_HOST`, `SPC_SAPIENT_PORT`, `SPC_SAPIENT_PARENT_HOST`, `SPC_SAPIENT_PARENT_PORT`. See [cli.md](cli.md#interoperability).
+The `SPC_SAPIENT_*` environment variables that once configured headless runs were removed in 0.23.0; use `--sapient-config=<ini>`. See [cli.md](cli.md#interoperability).
 
 ## Fusion (HLDMM)
 
@@ -148,7 +148,8 @@ The official **`dstl/BSI-Flex-335-v2-Test-Harness`** (Apache-2.0) is the counter
 - ASM reconnects with exponential backoff (`reconnect_backoff_max_ms`); detections queue (bounded, oldest-dropped) while disconnected.
 - HLDMM accepts per-client threads with a two-phase stop (shutdown-to-unblock, then join); the TLS handshake runs per client so a slow client can't stall `accept`.
 - Bus delivery is decoupled from the engine hot path (bounded ring + delivery thread), so a slow/blocked network peer never stalls processing.
-- Heartbeat-timeout eviction at the HLDMM and message archive/replay are future hardening items.
+- The HLDMM drops an ASM that has sent nothing for 60 s (heartbeat timeout); the ASM reconnects.
+- Message archive/replay is a future hardening item.
 
 ## Troubleshooting
 
