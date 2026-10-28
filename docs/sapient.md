@@ -46,12 +46,13 @@ SAPIENT config is **machine-level** — a property of this deployed box (role, e
       "sapient": {
         "role": "asm",                // "asm" (default) | "hldmm" | "fusion"
         "enabled": true,
+        "node_id": "",                // this node's SAPIENT identity, a UUID (both
+                                      //   roles); empty -> a new one at every start
 
         // --- ASM role ---
         "host": "10.0.0.5",           // fusion-node host to connect to
         "port": 7000,
         "name": "Speculor Camera 1",
-        "node_id": "",                // UUID; empty -> generated
         "status_interval_s": 5.0,
         "lat": 51.5074,               // fixed-install sensor position (optional):
         "lon": -0.1278,               //   reported as StatusReport node_location so
@@ -79,6 +80,8 @@ SAPIENT config is **machine-level** — a property of this deployed box (role, e
   }
 }
 ```
+
+**Node identity.** `node_id` is the node's SAPIENT identity in both roles: a sensor's reports and a fusion node's acknowledgements and uplink all carry it. Set it (Preferences → Extensions → SAPIENT → **Node ID**) to keep one identity across restarts. Left empty, the node takes a new UUID at every start, so the fusion node or C2 it reports to sees a new node after each restart. A value that is not a UUID is logged and replaced the same way.
 
 The `SPC_SAPIENT_*` environment variables that once configured headless runs were removed in 0.23.0; use `--sapient-config=<ini>`. See [cli.md](cli.md#interoperability).
 
