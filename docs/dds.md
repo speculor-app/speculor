@@ -28,7 +28,7 @@ Each exposed stream gets **its own topic** (`spc/stream/<origin_id>/<node_id>/<o
 
 Right-click a node in the graph editor → **Expose via DDS** → tick output ports (or use the **DDS** group in Node Properties, which shows the same per-port checkboxes). Only publishable output classes are offered (frame/table/scalar/record/packet/signal — not control ports). A signal port (audio, SDR I/Q) is published as a table sample whose header carries the sample rate, centre frequency, bandwidth, gain, AGC and bit depth; the instance's directory card names the stream `"kind": "signal"`. A blue **DDS** badge appears on exposed nodes.
 
-Exposure persists in the `.speculor` project (`interop.dds.exposed_ports`, keyed by node ID — duplicating a node never silently duplicates egress; see [project-format.md](project-format.md)). Toggling **Expose via DDS** takes effect live — the DDS pump re-seeds without restarting the pipeline — and the CLI needs no extra flags. An exposed-but-unwired port still runs its node (the tap counts as a consumer). Table streams advertise their runtime schema on the directory once the first sample flows.
+Exposure persists in the `.speculor` project (`interop.dds.exposed_ports`, keyed by node ID — duplicating a node never silently duplicates egress; see [project-format.md](project-format.md)). Toggling **Expose via DDS** takes effect live — the DDS pump re-seeds without restarting the pipeline — and the CLI needs no extra flags. An exposed-but-unwired port still runs its node (the tap counts as a consumer). Table streams advertise their runtime schema on the directory once the first sample flows. A stream nobody subscribes to costs nothing: no frame is read back from the GPU or copied for it, and no other sample is copied, until a reader matches.
 
 Egress is fully suppressed during any replay (session replay or reinjection) — recorded data never re-emits onto the domain. See [recording.md](recording.md).
 
@@ -45,7 +45,7 @@ Each exposed port has its own **encoding** and **QoS** — set them from the **C
 | Lossless (best) | Zstd, delta-filtered (level 1 … 22) | ✓ | ~5× at real-time (level 1) — the science default |
 | Lossy | JPEG (quality 1–100; GRAY8/RGB24/BGR24) | ✗ | previews — much smaller, not bit-exact |
 
-Both lossless codecs first apply a **format-aware horizontal delta predictor** (PNG "Sub"-style): raw byte compressors barely dent real textured frames (~1.0×), but delta+compress reaches 3–6×. The predictor is intrinsic to the encoding, so no extra wire field. Compression runs on the extension's egress pump, not the node worker, so frames dropped by a best-effort/latest-wins stream are never compressed. An unsupported codec/format silently falls back to Raw. Decode happens on the subscriber's ingest thread; the plugin never touches a codec.
+Both lossless codecs first apply a **format-aware horizontal delta predictor** (PNG "Sub"-style): raw byte compressors barely dent real textured frames (~1.0×), but delta+compress reaches 3–6×. The predictor is intrinsic to the encoding, so no extra wire field. Copying and compression run on the extension's egress pump, not the node worker, so they add nothing to the chain's latency, and frames dropped by a best-effort/latest-wins stream are never copied or compressed. An unsupported codec/format silently falls back to Raw. Decode happens on the subscriber's ingest thread; the plugin never touches a codec.
 
 **QoS** (all ports): `reliability` (reliable / best-effort), `history` (keep-last *depth* / keep-all), `durability` (volatile / transient-local — late joiners get the last *depth*), `lifespan_ms`, and the reliable **on-full** policy (drop-oldest for live, or block briefly so a science stream never drops — the pump absorbs the block, the engine never stalls). Defaults are kind-aware: frames best-effort/keep-last-1, packets reliable/keep-last-64, tables/scalars/records reliable/keep-last-8.
 
@@ -166,6 +166,6 @@ Pay crypto for identity and control (`spc/directory`, `spc/params/*`, `spc/time/
 - **No discovery**: instances must share `domain` (and `partition` if set). Multicast-blocked networks need `initial_peers` or a `discovery_server`.
 - **Table subscriber emits nothing**: check the subscriber log for `dds_subscribe node N bound to stream ...`; the schema latches from the publisher's directory within ~1 s of the first sample — a schema mismatch drops samples (counted in the extension's subscription status).
 - **Frames stutter on constrained links**: raise `socket_buf_mb`, set `frame_max_fps`, or prefer the packet path (compressed) with a decoder on the subscriber.
-- Live counters: the extension's status (per-stream `{samples, bytes, drops, decimated}`, subscription `{received, filled, dropped}`, time-sync offset/RTT) — surfaced in logs and in the DDS Console.
+- Live counters: the extension's status (per-stream `{samples, bytes, drops, decimated}`, where `samples` counts only samples sent to a reader; subscription `{received, filled, dropped}`, time-sync offset/RTT) — surfaced in logs and in the DDS Console.
 
 More general startup and runtime issues: [troubleshooting.md](troubleshooting.md).
