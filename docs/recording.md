@@ -26,7 +26,7 @@ The mode decides the replay backend automatically: opening a **Sources** recordi
 
 | File | Content |
 |------|---------|
-| `session.json` | Manifest: capture mode, session span, clock anchor, channel inventory, per-part time origins, gap windows |
+| `session.json` | Manifest: capture mode, session span, clock anchor, channel inventory, per-part time origins, gap windows. Written when recording starts and rewritten as each part closes, so it always lists the finished parts; `complete` turns `true` at a clean stop. |
 | `node-<id>[-partN].mkv` | A recorded node's video (data sources in Sources mode; every frame-producing node in Full mode). Compressed sources (RTSP/file) are stored **without re-encoding** (bitstream passthrough, ~0 CPU); sources with no compressed stream (USB/synthetic/astro) are encoded recorder-side (H.264 when an encoder is available, lossless FFV1 otherwise). Audio is muxed alongside when the source carries it. |
 | `traffic[-partN].mcap` | Structured traffic, one topic per node/port (`/nodes/3/ports/0/table`, `/nodes/5/params`, `/health`, `/gaps`, `/events`, …) — data-source ports only in Sources mode, every port in Full mode. Standard [MCAP](https://mcap.dev) — opens in Foxglove or the `mcap` CLI. Table schemas are embedded, so files are self-describing. |
 | `events.json` | Event summary written at stop: logical count + a downsampled timeline. Lets the Recordings browser preview events without opening the mcap. |
@@ -50,7 +50,7 @@ Sessions recorded before manifest schema `/4` carry no `traffic` object. Those r
 
 If a recording does drop, the first thing to check is **Preferences → Recording → data compression**. The writer is a single thread, and a codec it cannot sustain is the usual cause; the default (zstd) is chosen for throughput first.
 
-Crash tolerance: the MCAP writer flushes every 2 s, so a hard kill loses at most that window; finished video parts are always playable.
+Crash tolerance: a crash, kill or power loss loses at most the part that was being written. The manifest is kept current as each part closes, so an interrupted session still opens, with every finished part, and its `session.json` says `"complete": false`. A traffic part cut short is skipped with a warning rather than failing the session. Within an open MCAP part, the writer flushes every 2 s.
 
 ### Pre-record ("save the incident")
 
