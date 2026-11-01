@@ -28,7 +28,7 @@ A floating **Mask Editor** and **Camera Azimuth Finder** are launched from the T
 
 | Shortcut | Action | Notes |
 |----------|--------|-------|
-| `Ctrl+Z` / `Ctrl+Y` | Undo / Redo | Per-view undo stack. |
+| `Ctrl+Z` / `Ctrl+Y` | Undo / Redo | Per-view undo stack. In the Pipeline view it covers structural edits plus a node's name, colours, enabled state and DDS exposure. Parameter changes are not undoable. |
 | `Ctrl+X` / `Ctrl+C` / `Ctrl+V` | Cut / Copy / Paste | Pipeline view: nodes. Visualization view: gadgets (MIME `application/speculor-gadget`). |
 | `Ctrl+D` | Duplicate selection | |
 | `Del` | Delete selection | |
