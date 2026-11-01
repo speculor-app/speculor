@@ -28,7 +28,7 @@ The mode decides the replay backend automatically: opening a **Sources** recordi
 |------|---------|
 | `session.json` | Manifest: capture mode, session span, clock anchor, channel inventory, per-part time origins, gap windows. Written when recording starts and rewritten as each part closes, so it always lists the finished parts; `complete` turns `true` at a clean stop. |
 | `node-<id>[-partN].mkv` | A recorded node's video (data sources in Sources mode; every frame-producing node in Full mode). Compressed sources (RTSP/file) are stored **without re-encoding** (bitstream passthrough, ~0 CPU); sources with no compressed stream (USB/synthetic/astro) are encoded recorder-side (H.264 when an encoder is available, lossless FFV1 otherwise). Audio is muxed alongside when the source carries it. |
-| `traffic[-partN].mcap` | Structured traffic, one topic per node/port (`/nodes/3/ports/0/table`, `/nodes/5/params`, `/health`, `/gaps`, `/events`, …) — data-source ports only in Sources mode, every port in Full mode. Standard [MCAP](https://mcap.dev) — opens in Foxglove or the `mcap` CLI. Table schemas are embedded, so files are self-describing. |
+| `traffic[-partN].mcap` | Structured traffic, one topic per node/port (`/nodes/3/ports/0/table`, `/nodes/5/params`, `/health`, `/gaps`, `/events`, …) — data-source ports only in Sources mode, every port in Full mode. Standard [MCAP](https://mcap.dev) — opens in Foxglove or the `mcap` CLI. Table schemas are embedded, so files are self-describing. Every datum keeps the time and sequence number it carried: a table in its header, a scalar, record or control message as `{"timestamp_ns": …, "frame_number": …, "data": <its JSON>}` on a channel marked `speculor.stamped`. |
 | `events.json` | Event summary written at stop: logical count + a downsampled timeline. Lets the Recordings browser preview events without opening the mcap. |
 | `poster.jpg` | A 16:9 poster cover frame captured for the session, shown on the Recordings card (absent when the recorder captured no frame). |
 | `event_thumbs.json` | Downsampled event thumbnail crops — the Recordings card / event timeline reads these off-thread for hover previews, never the multi-GB mcap. |
@@ -123,7 +123,13 @@ Notes:
 
 ## Exporting
 
-`speculor_cli --export=<session-dir> [--export-from=<sec> --export-to=<sec> --export-out=<dir>]` extracts a segment to standard files: video remuxed (no re-encode) to MP4 (H.264/HEVC) or MKV (FFV1/MJPEG), tables to CSV with columns from the recorded schema, everything else to JSONL. Handy for sharing an incident clip or analyzing detections in a spreadsheet.
+`speculor_cli --export=<session-dir> [--export-from=<sec> --export-to=<sec> --export-out=<dir>]` extracts a segment to standard files:
+
+- **Video** is remuxed (no re-encode) to MP4 (H.264/HEVC) or MKV (FFV1/MJPEG). Without re-encoding it can only start on a keyframe, so it starts at the last keyframe at or before `--export-from`: the clip covers the whole range and may begin a little earlier.
+- **Tables** go to CSV: `log_utc_ns,timestamp_ns,frame_number,record_index`, then a column per field of the recorded schema.
+- **Everything else** goes to JSONL, one line per message: `log_utc_ns`, then the datum's own `timestamp_ns` and `frame_number` (absent in sessions recorded before they were kept), then `data`.
+
+`log_utc_ns` is when the recorder logged the message; `timestamp_ns` is the datum's own time, the capture time when its source set one. Handy for sharing an incident clip or analyzing detections in a spreadsheet.
 
 ## Current limits
 
