@@ -120,7 +120,7 @@ A target outside the envelope is dropped rather than clamped: the mount stops in
 - **Steer pad** — a D-pad that nudges the mount by `nudge_deg` per press. Double-clicking the image trims the aim point instead.
 - **LOCK / MANUAL / TUNE** toggles — engage the visual lock, take manual control (node parameters beat the command port), and open the preprocess tuning panel.
 
-The TUNE panel adjusts `image_preprocess` live over the `preproc_ctrl` control edge — invert, brightness, contrast, gamma, morphology — so you can dial in the detector against the sky you actually have. It stays hidden until the target node answers the state query, so an unwired `preproc_ctrl` simply means no button.
+The TUNE panel adjusts `image_preprocess` live over the `preproc_ctrl` control edge — invert, brightness, contrast, gamma, morphology — so you can dial in the detector against the sky you actually have. The tuning is saved with the project, like an edit in Node Properties. It stays hidden until the target node answers the state query, so an unwired `preproc_ctrl` simply means no button.
 
 ## Status and limits
 
