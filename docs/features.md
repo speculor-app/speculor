@@ -129,7 +129,7 @@ All three surfaces (Node Properties, Plugin Config Panel, Plugin Config Gadget) 
 - **GPU-resident frame passing** — frames stay on the GPU between GPU-capable plugins; no PCIe round-trip.
 - **Zero-cost CPU readback** — when an output has a CPU consumer, GPU work copies to a persistently-mapped staging buffer in the same command buffer; CPU consumers get data via `memcpy`, no extra GPU submission. Outputs with only GPU consumers stay resident-only (no staging copy recorded).
 - **Automatic CPU↔GPU transfers** — the engine auto-uploads CPU frames to GPU for GPU consumers and auto-downloads for CPU consumers. Plugins don't manage transfers.
-- **GPU pipeline depth** — a coalesced GPU subgraph can run several frames in flight. Tunable in Preferences → Performance (default `1`, range `1`–`3`) — see [preferences.md](preferences.md#performance).
+- **GPU pipeline depth** — a coalesced GPU subgraph can run several frames in flight. Tunable in Preferences → Performance (default `2`, range `1`–`3`) — see [preferences.md](preferences.md#performance).
 - **Mid-run `DEVICE_LOST` recovery** — the engine rebuilds a profile's Vulkan device and restarts the affected nodes when a plugin reports a lost device during execution.
 - **Preview GPU/CPU indicator** — the Preview info label shows which side the displayed frame originated on.
 
