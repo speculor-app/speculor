@@ -153,7 +153,7 @@ Both are disabled automatically during `--replay`, so a replayed incident never 
 
 ## GPU acceleration
 
-The CLI supports the same Vulkan-accelerated plugins the GUI does; plugins flagged `gpu_enabled` route through it. When Vulkan isn't available the CLI silently falls back to CPU, same as the GUI. Use `--pipeline-depth=<N>` to set how many frames a coalesced GPU subgraph keeps in flight (default `2`, range `1`–`3`).
+The CLI supports the same Vulkan-accelerated plugins the GUI does; plugins flagged `gpu_enabled` route through it. When Vulkan isn't available the CLI silently falls back to CPU, same as the GUI. Use `--pipeline-depth=<N>` to set how many frames a coalesced GPU subgraph keeps in flight (default `1`, range `1`–`3`).
 
 ## Limitations
 
