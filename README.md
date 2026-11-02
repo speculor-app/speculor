@@ -86,9 +86,9 @@ xattr -dr com.apple.quarantine .
 ./speculor_app
 ```
 
-## License key
+## Signing in
 
-Speculor uses license-key activation. On first launch you'll be prompted for a key — paste it into the activation dialog and the app authenticates against the licensing service. Once activated, the key is cached locally; the app falls back to a 14-day offline grace period if the licensing service is unreachable.
+The licence comes with your Speculor account. On first launch you sign in, or create an account, which comes with a free Community licence; the machine then downloads a signed licence file. A Community file never expires, so the app keeps running offline. A paid file is refreshed whenever the app is online; offline it lasts its month plus a 14-day grace, after which the app runs as Community until it can renew.
 
 Your licence **tier** decides what's unlocked — the headless CLI runner, MJPEG streaming, session recording & replay (Personal), DDS interoperability (Personal), and SAPIENT (Team). See [docs/licensing.md](docs/licensing.md).
 

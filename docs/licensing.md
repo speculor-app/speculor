@@ -1,6 +1,6 @@
 # Licensing
 
-Speculor is sold under a per-user offline-capable licence, and **the licence comes with your Speculor account**: a machine gets it by signing in. The app and CLI will not start without a valid signed licence file.
+Speculor is sold under a per-user offline-capable licence, and **the licence comes with your Speculor account**: a machine gets it by signing in. A machine must sign in once before the app starts; after that the app always starts, at Community at worst. The CLI needs a valid licence file of Personal or above.
 
 ## Licence tiers
 
@@ -29,7 +29,11 @@ The account and its tier are shown on the **Help → Account…** page. Upgrade 
 
 1. First launch shows **Sign in to Speculor**. Click **Sign in** (or **Create an account** — every account comes with a free Community licence). The sign-in opens in your browser, so Speculor never sees your password.
 2. Once you have signed in, the app picks the account's best active licence, binds it to this machine's fingerprint, downloads a signed licence file, and stores it under the OS user's application-data directory. The machine name defaults to the hostname.
-3. After that the app works fully offline up to the file's expiry plus a grace period (default 14 days). When the app is online it renews the sign-in and refreshes the licence file in the background ~2 s after the main window appears; if the account now carries a different licence (an upgrade, a purchase), the machine moves to it.
+3. After that the app works offline:
+   - **A Community licence file never expires**, so a Community machine runs offline for as long as it likes.
+   - **A paid licence file lasts a month.** Offline, it keeps working up to its expiry plus a grace period (default 14 days). Past that, the app runs as Community until it can reach the licensing server, and gets the paid tier back at the first launch online.
+
+   When the app is online it renews the sign-in and refreshes the licence file in the background ~2 s after the main window appears; if the account now carries a different licence (an upgrade, a purchase, or a subscription that ended and left the free Community licence), the machine moves to it. A file that has run out is renewed at launch the same way, before the app starts.
 4. **Help → Account… → Sign out** signs the machine out and gives its licence slot back, so another machine can use it.
 
 The app keeps only a sign-in token, never your password: in DPAPI on Windows, in the desktop keyring (GNOME Keyring, KWallet, KeePassXC) on Linux, and otherwise in a file only your OS user can read.
@@ -111,11 +115,23 @@ See [cli.md](cli.md) for the rest of the CLI reference.
 | Signature invalid / file tampered                  | Block         |
 | Fingerprint doesn't match this machine             | Block         |
 | `expiry > now`                                     | Allow         |
+| No expiry (a Community file)                       | Allow, as Community, for good |
 | `now > expiry`, `now < expiry + grace` (14 days)   | AllowWithWarning |
 | `now > expiry + grace`                             | Block         |
 | File claims issued > 24 h in the future            | Block         |
 
-The deliberate trade-off for offline tolerance: a licence file stays usable on its fingerprinted machine until it expires plus the grace period, even if it is revoked server-side in the meantime.
+**What Block means at launch:**
+
+| This machine…                     | Online                                   | Offline |
+|-----------------------------------|------------------------------------------|---------|
+| has signed in before              | renews the file; asks to sign in only if the account or key is refused | runs as **Community**, and says so in the status bar |
+| has never signed in               | asks to sign in                          | asks to sign in |
+
+The CLI does not fall back: a Block exits with code `2`, since the CLI needs Personal or above.
+
+A file with no expiry counts only as Community, whatever tier it names: it can never be revoked, so it may carry nothing that is paid for.
+
+The deliberate trade-off for offline tolerance: a paid licence file stays usable on its fingerprinted machine until it expires plus the grace period, even if it is revoked server-side in the meantime.
 
 ## Keep your licence file private
 
