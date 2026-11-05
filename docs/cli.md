@@ -18,8 +18,8 @@ speculor_cli <project.speculor> [plugin_dir] [options]
 | `--pipeline-depth=<N>` | (preference) | GPU coalesced-subgraph frames kept in flight; clamped to `[1, 3]`. Overrides Preferences → Performance → "GPU pipeline depth". |
 | `--pool-frames=<N>` | (preference) | Frame pool slots per producing node output, clamped to `[4, 64]`. Frame pools are shared per `(width, height, format)` across **all** nodes and chains, and a pool's ceiling is `N` times the outputs producing its geometry, so many same-resolution chains get room without raising this. A pool starts at 4 slots and grows only when every slot is in use, so memory follows what the chains really hold. Overrides Preferences → Performance. |
 | `--pool-budget-mb=<N>` | (preference) | Cap pool RAM per geometry; the pool depth is derived from it and the frame size. `0` = unlimited. Overrides Preferences → Performance. |
-| `--no-preferences` | off | Ignore the shared settings store entirely and run on built-in defaults — for reproducible CI runs that must not inherit local configuration. Command-line flags still apply. See [Configuration](#configuration). |
-| `--run-seconds=<N>` | off | Auto-stop cleanly after `N` seconds. |
+| `--no-preferences` | off | Ignore the shared settings store entirely and run on built-in defaults — for reproducible CI runs that must not inherit local configuration. That covers engine, GPU, log, recording and Time Sync preferences; an interoperability extension runs only from the INI its `--<id>-config` flag names; and no phone-session ingest starts, since pairing is kept in the store. Command-line flags still apply. See [Configuration](#configuration). |
+| `--run-seconds=<N>` | off | Auto-stop cleanly after `N` seconds, a whole number of 1 or more; anything else is a usage error (exit `64`). |
 | `--license-file=<path>` | (cached file) | Use a licence file from an explicit path instead of the cached one. See [licensing.md](licensing.md#cli-usage). |
 | `--offline-request` | — | For a machine with no internet: write its request (to `--out=<file>`), to exchange in the portal for a licence file. See [licensing.md](licensing.md#a-machine-with-no-internet). |
 | `--license-import=<file>` | — | Check a licence file brought by hand on this machine and install it. |
@@ -49,7 +49,7 @@ Example:
 ./speculor_cli my_pipeline.speculor ./plugins
 ```
 
-The CLI loads plugins from the directory, builds the pipeline, starts the engine, and (unless `--no-stream`) brings up one MJPEG HTTP server per layout marked `stream.enabled` in the project. It runs until interrupted with `Ctrl+C` (`SIGINT`) or `SIGTERM`. On shutdown it stops every streamer, calls `engine.stop()`, and exits with status 0.
+The CLI loads plugins from the directory, builds the pipeline, starts the engine, and (unless `--no-stream`) brings up one MJPEG HTTP server per layout marked `stream.enabled` in the project. It runs until interrupted with `Ctrl+C` (`SIGINT`) or `SIGTERM`. On shutdown it stops every streamer, calls `engine.stop()`, and exits with status 0, or 5 when a recording failed or lost data (see [Exit codes](#exit-codes)).
 
 Record a run, then re-run the recording at 4× with one parameter changed and capture the outcome:
 
@@ -97,9 +97,14 @@ Headless rendering uses Qt's **offscreen QPA platform** — no display server, n
 
 | Code | Meaning |
 |------|---------|
-| `0`  | Clean shutdown via signal. |
+| `0`  | Clean shutdown, after a signal or `--run-seconds`. |
 | `1`  | Project file missing, failed to parse, or the engine could not build / start the pipeline. |
 | `2`  | Licence check failed — `speculor_cli` needs a tier above Community. See [licensing.md](licensing.md#cli-usage). |
+| `4`  | This processor is older than the build needs; the message names the missing features. |
+| `5`  | The run stopped cleanly, but its recording failed to start, or the saved session is incomplete: it dropped video packets or structured messages (`session.json` says which). A standby recording that was never triggered saved nothing and is not a failure. |
+| `64` | A usage error: an unknown option or a value an option does not take. This holds in every mode, so `--verify` never reports a typo as a verdict. |
+
+`--verify` has codes of its own: `0` unchanged, `1` modified or not trusted, `2` not sealed, `3` unreadable.
 
 ## Logs
 
