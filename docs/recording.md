@@ -26,13 +26,15 @@ The mode decides the replay backend automatically: opening a **Sources** recordi
 
 | File | Content |
 |------|---------|
-| `session.json` | Manifest: capture mode, session span, clock anchor, channel inventory, per-part time origins, gap windows. Written when recording starts and rewritten as each part closes, so it always lists the finished parts; `complete` turns `true` at a clean stop. |
+| `session.json` | Manifest: capture mode, session span, clock anchor, channel inventory, per-part time origins, gap windows, and `streams`, the stream each node carries (see below). Written when recording starts and rewritten as each part closes, so it always lists the finished parts; `complete` turns `true` at a clean stop. |
 | `node-<id>[-partN].mkv` | A recorded node's video (data sources in Sources mode; every frame-producing node in Full mode). Compressed sources (RTSP/file) are stored **without re-encoding** (bitstream passthrough, ~0 CPU); sources with no compressed stream (USB/synthetic/astro) are encoded recorder-side (H.264 when an encoder is available, lossless FFV1 otherwise). Audio is muxed alongside when the source carries it. |
 | `traffic[-partN].mcap` | Structured traffic, one topic per node/port (`/nodes/3/ports/0/table`, `/nodes/5/params`, `/health`, `/gaps`, `/events`, …) — data-source ports only in Sources mode, every port in Full mode. Standard [MCAP](https://mcap.dev) — opens in Foxglove or the `mcap` CLI. Table schemas are embedded, so files are self-describing. Every datum keeps the time and sequence number it carried: a table in its header, a scalar, record or control message as `{"timestamp_ns": …, "frame_number": …, "data": <its JSON>}` on a channel marked `speculor.stamped`. |
 | `events.json` | Event summary written at stop: logical count + a downsampled timeline. Lets the Recordings browser preview events without opening the mcap. |
 | `poster.jpg` | A 16:9 poster cover frame captured for the session, shown on the Recordings card (absent when the recorder captured no frame). |
 | `event_thumbs.json` | Downsampled event thumbnail crops — the Recordings card / event timeline reads these off-thread for hover previews, never the multi-GB mcap. |
 | `graph.speculor` | The exact pipeline that produced the session — replay rebuilds from this. |
+
+A device with no pipeline, such as a phone, names its channels for the stream they carry (`/nodes/imu/ports/0/table`) rather than a node id. `streams` in `session.json` maps node ids to those names (`{"7": "imu"}`), taken from the parameter each node's plugin marks as its stream binding, such as a DDS Subscribe node's Remote Node ID. Replay uses it to put each named channel on its node. A session without the field is matched through the DDS Subscribe nodes in `graph.speculor`.
 
 Long recordings **segment automatically**: video parts roll (keyframe-aligned) at the video part size (default 1024 MB) and MCAP parts at the data part size (default 512 MB). Recorder memory is bounded by the memory spool (default 64 MB). All budgets live in **Preferences → Recording**, and `speculor_cli` reads the same settings — see [cli.md](cli.md#recording-storage-budgets).
 
