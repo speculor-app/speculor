@@ -20,7 +20,7 @@ A session is recorded in one of two explicit modes, chosen in **Preferences → 
 - **Sources** (default) — only **data-source** nodes are tapped, and *all* their outputs are (frames, packets, and structured data). A data source is a plugin that ingests from *outside* the pipeline — camera, SDR, audio, GPS, file, network, synthetic generator. Derived nodes (spectrum, oscilloscope, detectors, overlays) are **not** recorded. Leanest on disk. Intended for **reinjection replay**: the recorded sources are fed back through the live pipeline so every derived view **recomputes**.
 - **Full** — **every** node's outputs are tapped (one video per frame-producing node, plus all structured traffic), so the session can be **scrubbed forward/back over every view**. Much larger.
 
-The mode decides the replay backend automatically: opening a **Sources** recording runs it as a reinjection replay (its derived views were never recorded, so faithful scrub isn't possible), while a **Full** recording scrubs faithfully.
+The mode decides the replay backend automatically: opening a **Sources** recording runs it as a reinjection replay (its derived views were never recorded, so faithful scrub isn't possible), while a **Full** recording scrubs faithfully. A Sources recording opened on a machine where none of its source plugins are installed, or none under this licence, plays as recorded instead, showing the sources' own outputs, since the pipeline cannot run them again there.
 
 ### What lands in the session folder
 
