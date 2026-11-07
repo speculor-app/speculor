@@ -95,7 +95,7 @@ Edit in the GUI at **Preferences → Extensions → Fast DDS**, or set the machi
 
 ## Time sync
 
-One instance runs `time_role=master` (advertised on its directory card); followers poll it NTP-style over DDS — a fresh random nonce must echo in the reply and the responder must be the selected master, so blind injection and rogue responders are rejected. Corrections feed the process-wide disciplined clock with its normal slew/step policy, so all instances stamp data on one timeline.
+One instance runs `time_role=master` (advertised on its directory card); followers poll it NTP-style over DDS — a fresh random nonce must echo in the reply and the responder must be the selected master, so blind injection and rogue responders are rejected. A reply whose round trip is far above the recent ones is rejected too: a reply delayed more one way than the other would move the offset by up to half its round trip. Corrections feed the process-wide disciplined clock with its normal slew/step policy, so all instances stamp data on one timeline.
 
 **Followers should set Preferences → Time Sync to Off** — running both disciplines steers the clock from two sources (see [preferences.md](preferences.md#time-sync)). A GPS/NTP-disciplined master transparently propagates its quality (error bound, lock state).
 
