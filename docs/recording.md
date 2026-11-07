@@ -40,12 +40,12 @@ Long recordings **segment automatically**: video parts roll (keyframe-aligned) a
 
 ### When the recorder cannot keep up
 
-Recording never stalls the pipeline: if the spool fills, messages are dropped rather than held. What matters then is that the recording **says so**, because a session missing data is a different object from a complete one and the two must never look alike.
+Recording never stalls the pipeline: if the spool fills or free space falls below the floor, data is dropped rather than held. Data is lost too when a file cannot be opened or written, and when the raw-image encoder cannot take a frame: its queue is full, or the source changed pixel format mid-run. What matters then is that the recording **says so**, because a session missing data is a different object from a complete one and the two must never look alike.
 
 Loss is recorded in three places at once:
 
-- **`session.json`** — `packets_dropped` + `gaps` for video, and a `traffic` object (`messages_written`, `messages_dropped`, `gaps`) for structured traffic. The two recorders drop independently, so they are counted separately.
-- **The `/gaps` topic** — an in-band record per loss window, so the gap is visible on the replay timeline rather than appearing as a stretch where nothing happened to arrive.
+- **`session.json`** — `packets_dropped` + `gaps` for video, and a `traffic` object (`messages_written`, `messages_dropped`, `gaps`) for structured traffic. The two recorders drop independently, so they are counted separately. Each gap names the streams it cost: `nodes`, the source node ids, for video, and `topics` for structured traffic.
+- **The `/gaps` topic** — an in-band record per loss window, naming its `topics`, so the gap is visible on the replay timeline rather than appearing as a stretch where nothing happened to arrive.
 - **The UI** — a warning at stop naming the number of dropped messages, and a red `INCOMPLETE` line on the session's card in the Recordings browser. Headless, the CLI's stop line carries the same count.
 
 Sessions recorded before manifest schema `/4` carry no `traffic` object. Those report loss as **unknown**, never as clean — an older recording cannot vouch for traffic it never accounted for.
