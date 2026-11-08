@@ -34,7 +34,7 @@ A floating **Mask Editor** and **Camera Azimuth Finder** are launched from the T
 | `Del` | Delete selection | |
 | `Ctrl+G` | Group selected nodes | Pipeline view only. |
 
-Edit menu state tracks selection, clipboard contents, and the active view's undo stack. While the pipeline is running, mutating actions in the Pipeline view are force-disabled — the engine runs against a snapshot and in-place edits would desync it. Copy stays enabled.
+Edit menu state tracks selection, clipboard contents, and the active view's undo stack. While the pipeline is running, mutating actions in the Pipeline view are force-disabled — the engine runs against a snapshot and in-place edits would desync it. Copy stays enabled. Disabling or enabling a node or group is the exception: it is allowed while running, and restarts the pipeline so the change takes effect. Parameters marked stop-only, such as a node's GPU profile, are greyed out until the pipeline stops, including those a virtual plugin exports.
 
 ### Node groups
 
