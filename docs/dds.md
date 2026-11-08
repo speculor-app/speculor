@@ -97,6 +97,8 @@ Edit in the GUI at **Preferences → Extensions → Fast DDS**, or set the machi
 
 One instance runs `time_role=master` (advertised on its directory card); followers poll it NTP-style over DDS — a fresh random nonce must echo in the reply and the responder must be the selected master, so blind injection and rogue responders are rejected. A reply whose round trip is far above the recent ones is rejected too: a reply delayed more one way than the other would move the offset by up to half its round trip. Corrections feed the process-wide disciplined clock with its normal slew/step policy, so all instances stamp data on one timeline.
 
+Received data keeps the timestamps its sender gave it. Those are on the receiver's clock only when both clocks follow a time source: this DDS time sync, or NTP, PTP or GPS on each machine (Preferences → Time Sync). Each instance reports its clock on its directory card. A subscribed stream is **synced** when both clocks follow a time source, and **unsynced** otherwise, including when the sender does not report its clock. A clock left on the default Time Sync setting (Auto) follows the operating system's, so it counts as synced when the operating system keeps time by NTP, and unsynced when it does not. The subscription status shows each stream's state, and the log warns once, naming the `dds_subscribe` node, when a stream becomes unsynced. The timestamps themselves are never shifted: an offset worked out from arrival times would include the network delay.
+
 **Followers should set Preferences → Time Sync to Off** — running both disciplines steers the clock from two sources (see [preferences.md](preferences.md#time-sync)). A GPS/NTP-disciplined master transparently propagates its quality (error bound, lock state).
 
 ## Remote parameters
@@ -165,7 +167,8 @@ Pay crypto for identity and control (`spc/directory`, `spc/params/*`, `spc/time/
 
 - **No discovery**: instances must share `domain` (and `partition` if set). Multicast-blocked networks need `initial_peers` or a `discovery_server`.
 - **Table subscriber emits nothing**: check the subscriber log for `dds_subscribe node N bound to stream ...`; the schema latches from the publisher's directory within ~1 s of the first sample — a schema mismatch drops samples (counted in the extension's subscription status).
+- **A stream is marked unsynced**: its timestamps may not line up with local data. Turn on time sync (one master, the others followers), or give both machines a time source.
 - **Frames stutter on constrained links**: raise `socket_buf_mb`, set `frame_max_fps`, or prefer the packet path (compressed) with a decoder on the subscriber.
-- Live counters: the extension's status (per-stream `{samples, bytes, drops, decimated}`, where `samples` counts only samples sent to a reader; subscription `{received, filled, dropped}`, time-sync offset/RTT) — surfaced in logs and in the DDS Console.
+- Live counters: the extension's status (per-stream `{samples, bytes, drops, decimated}`, where `samples` counts only samples sent to a reader; subscription `{received, filled, dropped, clock}`, time-sync offset/RTT) — surfaced in logs and in the DDS Console.
 
 More general startup and runtime issues: [troubleshooting.md](troubleshooting.md).
