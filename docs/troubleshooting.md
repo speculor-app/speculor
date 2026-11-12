@@ -76,6 +76,7 @@ The engine ships a watchdog that detects hung or crashed plugins and restarts th
 
 - Hang timeout: 10 s for processing nodes, 30 s for source / GPU nodes.
 - Max restarts: 3 (then the node is disabled and downstream nodes are cascade-disabled).
+- A node running on the GPU gets one more chance first: at the limit it moves to its CPU path, logs that it moved off the GPU, and gets another 3 restarts there. It stays on the CPU until the pipeline is next started.
 - Restart cooldown: 5 s.
 
 Tune all of these under **Edit → Preferences… → Reliability**. See [preferences.md → reliability](preferences.md#reliability--node-watchdog) for the keys.

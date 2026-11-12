@@ -73,7 +73,7 @@ Maps 1:1 onto `spc::NodeWatchdog::Config`. Timeouts are stored in **milliseconds
 | `preferences/engine/watchdog/source_hang_timeout_ms` | int | `30000` | Same, for source nodes (file demuxers / cameras start slowly). |
 | `preferences/engine/watchdog/gpu_hang_timeout_ms` | int | `30000` | Same, for GPU-routed nodes (FFmpeg + Vulkan teardown is slow). |
 | `preferences/engine/watchdog/poll_interval_ms` | int | `500` | Watchdog tick rate. Fast-path `DEVICE_LOST` recovery rides this interval. |
-| `preferences/engine/watchdog/max_restarts` | int | `3` | Max restart attempts per node before the watchdog disables it and cascade-disables downstream. `0` disables on first hang. |
+| `preferences/engine/watchdog/max_restarts` | int | `3` | Max restart attempts per node before the watchdog disables it and cascade-disables downstream. `0` disables on first hang. A node running on the GPU is not disabled at the limit: it moves to its CPU path, where it gets the same number of restarts again, and is disabled only once those are used up too. |
 | `preferences/engine/watchdog/restart_cooldown_ms` | int | `5000` | Minimum gap between restart attempts. |
 | `preferences/engine/watchdog/auto_restart` | bool | `true` | If false, the watchdog detects but doesn't restart. |
 
